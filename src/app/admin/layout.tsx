@@ -3,6 +3,9 @@ import Link from "next/link";
 import { AdminNav } from "@/components/admin/nav";
 import { SITE } from "@/lib/constants";
 
+// Admin pages always read live data — never prerender them at build time.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: { default: "Admin", template: `%s · ${SITE.name} admin` },
   robots: { index: false, follow: false },

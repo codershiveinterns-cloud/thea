@@ -98,6 +98,8 @@ export const SETTING_DEFAULTS: Record<SettingKey, string> = {
 };
 
 export const POSTS_PER_DAY_MAX = 3;
+/** Quality-gate pass mark (CLAUDE.md): posts scoring below this are flagged "needs work"; auto-publish requires ≥ this. */
+export const QUALITY_GATE_MIN = 85;
 export const RELATED_POSTS_MIN = 3;
 export const RELATED_POSTS_MAX = 5;
 export const FAQ_MIN = 3;
