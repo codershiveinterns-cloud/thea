@@ -69,10 +69,32 @@ src/pipeline/         content pipeline (phase 3)
 
 `DRAFT → REVIEW → APPROVED → PUBLISHED → ARCHIVED` (see `src/lib/post-status.ts`). Publishing runs `validateForPublish`: it requires the quick answer, a "Method 1:" H2, an "If nothing worked" section, meta title/description, at least 3 FAQ items and a featured image or screenshot. Missing screenshots and an empty "Tested on" build are warnings, not blockers, so a post can go live with a generated featured image and be verified afterwards.
 
+## Public site
+
+| Route | Notes |
+| --- | --- |
+| `/` | Home: latest posts, "Recent Windows updates" strip, one section per category |
+| `/[category]`, `/[category]/page/[n]` | Category listing, 12 per page, ISR |
+| `/[category]/[slug]` | Post page with the full CLAUDE.md structure and Article + FAQPage + BreadcrumbList + Person JSON-LD |
+| `/author/[slug]` | Author profile + posts, Person JSON-LD |
+| `/about`, `/contact`, `/editorial-policy` | Static pages |
+| `/search?q=` | Title/quick-answer search (noindex) |
+| `/sitemap.xml`, `/robots.txt`, `/feed.xml` | Generated from published posts |
+| `/api/og?title=&category=` | 1200×630 branded OG image (also the fallback featured image) |
+
+Only `PUBLISHED` posts are ever rendered publicly. Pages are statically generated and revalidated hourly, and the admin calls `revalidatePath("/", "layout")` on every publish/unpublish so changes show up immediately. Ad HTML from Settings renders in three slots on the post page (after the quick answer, before the last method, before the FAQ) and only when the slot is non-empty.
+
+### Lighthouse
+
+```bash
+npm run build && npm start
+npx lighthouse http://localhost:3000/error-codes/fix-0x800f0922-windows-11 --view
+```
+
 ## Build order
 
 1. ✅ Scaffold + Prisma (SQLite) + seed + `/admin`
-2. Public site + SEO + OG images + Lighthouse ≥ 95
+2. ✅ Public site + SEO + OG images + Lighthouse ≥ 95
 3. Pipeline + `npm run generate` + scheduler + quality gate + tests
 4. Polish, logging, sanitisation
 5. Go-live (Vercel, Postgres, IndexNow, cron)

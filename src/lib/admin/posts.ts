@@ -13,6 +13,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { fdJson, fdLines, fdOptional, fdString } from "@/lib/form";
 import { pingIndexNow } from "@/lib/indexing";
+import { revalidatePublicSite } from "@/lib/revalidate";
 import { canTransition, STATUS_LABEL, TRANSITIONS, validateForPublish } from "@/lib/post-status";
 import { slugify } from "@/lib/slug";
 import { fieldErrors, postInputSchema, postStatusSchema, type PostInput } from "@/lib/validation";
@@ -133,9 +134,10 @@ function revalidateAdmin(postId: string) {
 }
 
 function revalidatePublic(categorySlug: string, slug: string) {
-  revalidatePath("/");
-  revalidatePath(`/${categorySlug}`);
-  revalidatePath(`/${categorySlug}/${slug}`);
+  // Home, category, author, sitemap and feed all embed this post — refresh them all (see src/lib/revalidate.ts).
+  void categorySlug;
+  void slug;
+  revalidatePublicSite();
 }
 
 // ---------- actions ----------
