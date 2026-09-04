@@ -1,0 +1,120 @@
+// FixDesk data model.
+// Local dev runs on SQLite; the schema uses only types that map 1:1 to Postgres
+// (enums, Json, DateTime) so switching DATABASE_URL + provider later needs no model changes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum PostStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum GeneratedBy {
+  AI
+  HUMAN
+}
+
+enum KeywordSource {
+  FEED
+  MANUAL
+}
+
+enum KeywordStatus {
+  QUEUED
+  USED
+  SKIPPED
+}
+
+model Author {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  avatar        String?
+  bio           String
+  /// JSON array of category slugs this author covers, e.g. ["error-codes","how-to"]
+  categoryFocus Json     @default("[]")
+  /// Voice/style instructions injected into the generation system prompt
+  stylePrompt   String
+  createdAt     DateTime @default(now())
+  posts         Post[]
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String
+  posts       Post[]
+  keywords    Keyword[]
+}
+
+model Post {
+  id              String      @id @default(cuid())
+  title           String
+  slug            String      @unique
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id])
+  authorId        String
+  author          Author      @relation(fields: [authorId], references: [id])
+  status          PostStatus  @default(DRAFT)
+  /// 2–3 sentence answer shown in the box under the H1
+  quickAnswer     String      @default("")
+  /// Markdown body. H2s "Method N: …" and "If nothing worked" are enforced by the editor/pipeline.
+  body            String      @default("")
+  /// JSON array of strings, e.g. ["Windows 11 24H2","Windows 11 25H2"]
+  affectedBuilds  Json        @default("[]")
+  /// JSON array of {question, answer}
+  faq             Json        @default("[]")
+  metaTitle       String      @default("")
+  metaDescription String      @default("")
+  featuredImage   String?
+  /// JSON array of image URLs uploaded by the editor
+  screenshots     Json        @default("[]")
+  /// JSON array of source URLs used for research
+  sourceUrls      Json        @default("[]")
+  qualityScore    Int?
+  qualityNotes    String?
+  generatedBy     GeneratedBy @default(HUMAN)
+  testedOnBuild   String?
+  lastVerifiedAt  DateTime?
+  publishedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  /// Editor-confirmed internal links (3–5 related posts). Self many-to-many.
+  relatedPosts    Post[]      @relation("RelatedPosts")
+  relatedFrom     Post[]      @relation("RelatedPosts")
+
+  @@index([status])
+  @@index([categoryId, status])
+  @@index([authorId])
+  @@index([publishedAt])
+}
+
+model Keyword {
+  id         String        @id @default(cuid())
+  phrase     String        @unique
+  categoryId String
+  category   Category      @relation(fields: [categoryId], references: [id])
+  source     KeywordSource @default(MANUAL)
+  status     KeywordStatus @default(QUEUED)
+  createdAt  DateTime      @default(now())
+
+  @@index([status, createdAt])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
