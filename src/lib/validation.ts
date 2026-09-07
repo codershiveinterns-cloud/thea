@@ -101,6 +101,11 @@ export const settingsInputSchema = z.object({
   INDEXNOW_KEY: z.string().trim().max(128).default(""),
   GA_MEASUREMENT_ID: z.string().trim().max(40).default(""),
   GSC_VERIFICATION: z.string().trim().max(200).default(""),
+  FEED_URLS: z
+    .string()
+    .max(4000)
+    .default("")
+    .refine((v) => v.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).every((l) => /^https?:\/\/\S+$/.test(l)), "One feed URL per line, each starting with http(s)://"),
   "AD_SLOT_after-quick-answer": z.string().max(20000).default(""),
   "AD_SLOT_mid-article": z.string().max(20000).default(""),
   "AD_SLOT_end-of-article": z.string().max(20000).default(""),

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LinkButton } from "@/components/ui/button";
-import { Card, PageHeader } from "@/components/ui/card";
+import { Card, Notice, PageHeader } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/dates";
 import { KeywordQueue } from "@/components/admin/dashboard/keyword-queue";
 import { RecentActivity } from "@/components/admin/dashboard/recent-activity";
 import { ReviewQueue } from "@/components/admin/dashboard/review-queue";
@@ -27,6 +28,22 @@ export default async function AdminDashboardPage() {
       />
 
       <StatCards counts={data.statusCounts} />
+
+      {data.lastRun ? (
+        <div className="mt-6">
+          <Notice kind={data.lastRun.ok ? "success" : "warning"}>
+            <span className="font-medium">Last pipeline run</span> · {formatDateTime(data.lastRun.finishedAt)}
+            {data.lastRun.dryRun ? " (dry run)" : ""}: {data.lastRun.summary}
+            {data.lastRun.errors.length ? (
+              <ul className="mt-1 list-disc pl-5 text-xs">
+                {data.lastRun.errors.slice(0, 5).map((e) => (
+                  <li key={e}>{e}</li>
+                ))}
+              </ul>
+            ) : null}
+          </Notice>
+        </div>
+      ) : null}
 
       <div className="mt-6 grid gap-6 xl:grid-cols-3">
         <Card

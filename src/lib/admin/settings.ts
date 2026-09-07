@@ -25,15 +25,16 @@ function readSettingsForm(fd: FormData): Record<string, string | boolean> {
     INDEXNOW_KEY: fdString(fd, "INDEXNOW_KEY"),
     GA_MEASUREMENT_ID: fdString(fd, "GA_MEASUREMENT_ID"),
     GSC_VERIFICATION: fdString(fd, "GSC_VERIFICATION"),
+    FEED_URLS: fdString(fd, "FEED_URLS"),
     ...adSlots,
   };
 }
 
 /** Setting.value is a string column; numbers and booleans are stored as their canonical string form. */
 function toStoredValues(input: SettingsInput): Array<{ key: SettingKey; value: string }> {
-  return (Object.keys(input) as SettingKey[]).map((key) => {
+  return (Object.keys(input) as (keyof SettingsInput)[]).map((key) => {
     const v = input[key];
-    return { key, value: typeof v === "string" ? v : String(v) };
+    return { key: key as SettingKey, value: typeof v === "string" ? v : String(v) };
   });
 }
 

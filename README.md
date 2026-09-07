@@ -32,8 +32,9 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `npm run db:seed` | Idempotent seed (`prisma/seed.ts`) |
 | `npm run db:reset` | Drop, recreate and reseed the local DB |
 | `npm run db:studio` | Prisma Studio |
-| `npm run generate` | Run the content pipeline once (phase 3) |
-| `npm run scheduler` | Local daily scheduler, 09:00 local time (phase 3) |
+| `npm run generate` | Run the content pipeline once. Flags: `-- --dry-run`, `-- --limit 1`, `-- --skip-ingest`, `-- --keyword "phrase" --category error-codes` |
+| `npm run scheduler` | Local daily scheduler (node-cron, 09:00 local; `-- --now` runs today's batch immediately) |
+| `npm test` | Vitest: feed parser, identifier extraction, generated-post validator, quality-gate decision, selection |
 
 ## Environment variables
 
@@ -41,8 +42,9 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | --- | --- | --- |
 | `DATABASE_URL` | yes | `file:./dev.db` locally. Postgres connection string at go-live. |
 | `NEXT_PUBLIC_SITE_URL` | yes | Canonical origin, no trailing slash. Used by sitemap, JSON-LD, OG images, IndexNow. |
-| `ANTHROPIC_API_KEY` | phase 3 | Never commit it. |
-| `ANTHROPIC_MODEL` | phase 3 | Model name used by the pipeline. |
+| `ANTHROPIC_API_KEY` | for generation | Never commit it. Without it, ingest still runs; generation stops with a clear error. |
+| `ANTHROPIC_MODEL` | for generation | Model id used by the pipeline (default `claude-opus-5`). |
+| `SCHEDULER_CRON` | no | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
 | `CRON_SECRET` | go-live | Protects `/api/cron/generate`. |
 
 Runtime settings that an editor changes (posts per day, auto-publish, ad slot HTML, IndexNow key, GA4 id, Search Console tag) live in the `Setting` table and are edited at `/admin/settings`, not in env.
@@ -91,10 +93,26 @@ npm run build && npm start
 npx lighthouse http://localhost:3000/error-codes/fix-0x800f0922-windows-11 --view
 ```
 
+## Content pipeline (`src/pipeline`)
+
+One run = CLAUDE.md steps 1–9:
+
+1. **Ingest** — fetch the RSS/Atom feeds from Settings → Feeds (default: the Windows Insider blog), validate with Zod, keep items from the last 14 days, derive keywords (KB, build, version, error code, feature) and queue new ones (max 20 per run, deduped by phrase). Identifiers are only ever copied from feed text.
+2. **Select** — `POSTS_PER_DAY` queued keywords, newest first, never more than two per category per day.
+3. **Assign** — random author whose `categoryFocus` matches, avoiding the previous post's author.
+4. **Research** — fetch up to 5 source pages (KB article → feed link → official references), extract text. No sources → no post.
+5. **Generate** — one Anthropic call with a schema-constrained JSON output, then strict validation (Method H2s, "If nothing worked", 3–5 FAQ, meta lengths, no HTML).
+6. **Quality gate** — deterministic identifier check against the sources + a second scoring call (0–100).
+7. **Internal links** — suggestions matched to published posts by category and title similarity.
+8. **Featured image** — the branded `/api/og` card for the title.
+9. **Publish decision** — `AUTO_PUBLISH` off → `REVIEW`. On → `PUBLISHED` only at score ≥ 85 with no unsupported identifiers, then revalidate + IndexNow.
+
+Entry points: `npm run generate`, `npm run scheduler`, the dashboard's "Run pipeline now", and `POST /api/cron/generate` (Bearer `CRON_SECRET`; open on localhost when the secret is unset). The last run's report is shown on the dashboard. The editor's "Regenerate section" button rewrites one H2 from the post's stored source URLs.
+
 ## Build order
 
 1. ✅ Scaffold + Prisma (SQLite) + seed + `/admin`
 2. ✅ Public site + SEO + OG images + Lighthouse ≥ 95
-3. Pipeline + `npm run generate` + scheduler + quality gate + tests
+3. ✅ Pipeline + `npm run generate` + scheduler + quality gate + tests
 4. Polish, logging, sanitisation
 5. Go-live (Vercel, Postgres, IndexNow, cron)

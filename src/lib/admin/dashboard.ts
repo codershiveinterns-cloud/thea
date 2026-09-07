@@ -4,6 +4,8 @@
  * server component. Mutations live in the sibling src/lib/admin/* action files.
  */
 import { QUALITY_GATE_MIN } from "@/lib/constants";
+import { summarizeReport } from "@/pipeline/run";
+import type { PipelineReport } from "@/pipeline/log";
 import type { PostStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { POST_STATUSES } from "@/lib/constants";
@@ -52,7 +54,10 @@ export type DashboardSettings = {
   autoPublish: boolean;
 };
 
+export type LastRun = { finishedAt: string; ok: boolean; dryRun: boolean; summary: string; errors: string[] } | null;
+
 export type DashboardData = {
+  lastRun: LastRun;
   statusCounts: StatusCounts;
   reviewQueue: ReviewQueueItem[];
   verifyQueue: VerifyQueueItem[];
@@ -133,8 +138,25 @@ async function getDashboardSettings(): Promise<DashboardSettings> {
   };
 }
 
+async function getLastRun(): Promise<LastRun> {
+  const raw = (await getAllSettings()).PIPELINE_LAST_RUN;
+  if (!raw) return null;
+  try {
+    const report = JSON.parse(raw) as PipelineReport;
+    return {
+      finishedAt: report.finishedAt,
+      ok: report.ok,
+      dryRun: report.dryRun,
+      summary: summarizeReport(report),
+      errors: report.log.filter((e) => e.level === "error").map((e) => `[${e.step}] ${e.message}`),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
-  const [statusCounts, reviewQueue, verifyQueue, queuedCount, next, recentActivity, settings] = await Promise.all([
+  const [statusCounts, reviewQueue, verifyQueue, queuedCount, next, recentActivity, settings, lastRun] = await Promise.all([
     getStatusCounts(),
     getReviewQueue(),
     getVerifyQueue(),
@@ -142,6 +164,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     getNextKeywords(),
     getRecentActivity(),
     getDashboardSettings(),
+    getLastRun(),
   ]);
 
   return {
@@ -151,5 +174,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     keywordQueue: { queuedCount, next },
     recentActivity,
     settings,
+    lastRun,
   };
 }

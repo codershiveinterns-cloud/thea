@@ -17,7 +17,7 @@ function display(key: SettingKey, value: string): string {
 
 /** Read-only table of the effective value of every setting next to its default. */
 export function SettingsReference({ values, savedAt }: Props) {
-  const keys = Object.values(SETTING_KEYS) as SettingKey[];
+  const keys = (Object.values(SETTING_KEYS) as SettingKey[]).filter((k) => k !== SETTING_KEYS.PIPELINE_LAST_RUN);
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[40rem] text-left text-sm">

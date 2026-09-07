@@ -125,6 +125,33 @@ export function SettingsForm({ initial }: { initial: Values }) {
         </div>
       </Card>
 
+      {/* 1b. Feeds */}
+      <Card title="Feeds">
+        <Field
+          label="Feed URLs"
+          htmlFor={`${id}-feeds`}
+          hint="one per line"
+          error={errors.FEED_URLS}
+          help={
+            <>
+              RSS/Atom feeds the pipeline ingests each run. Leave empty to use the built-in default (the Windows Insider blog).
+              Add the &ldquo;Get RSS updates&rdquo; links from the Windows 11 update history and release health pages here.
+            </>
+          }
+        >
+          <Textarea
+            id={`${id}-feeds`}
+            name="FEED_URLS"
+            rows={4}
+            className="font-mono text-xs"
+            placeholder="https://blogs.windows.com/windows-insider/feed/"
+            value={values.FEED_URLS}
+            onChange={(e) => set("FEED_URLS", e.target.value)}
+            aria-invalid={errors.FEED_URLS ? true : undefined}
+          />
+        </Field>
+      </Card>
+
       {/* 2. Ad slots */}
       <Card title="Ad slots">
         <div className="space-y-5">
