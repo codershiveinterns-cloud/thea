@@ -1,4 +1,4 @@
-// FixDesk data model.
+// Thea data model.
 // Local dev runs on SQLite; the schema uses only types that map 1:1 to Postgres
 // (enums, Json, DateTime) so switching DATABASE_URL + provider later needs no model changes.
 

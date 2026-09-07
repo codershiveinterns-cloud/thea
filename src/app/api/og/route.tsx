@@ -123,7 +123,7 @@ export function GET(request: NextRequest) {
                 ...boldStyle(36, WHITE),
               }}
             >
-              F
+              T
             </div>
             <div style={{ marginLeft: 16, fontSize: 32, ...boldStyle(32, ZINC_900) }}>{SITE.name}</div>
           </div>

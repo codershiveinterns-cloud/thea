@@ -1,4 +1,4 @@
-# FixDesk
+# Thea
 
 SEO-first blog covering Windows updates (what changed, what broke, how to fix it) and error-code fixes for the newest Windows builds. See [CLAUDE.md](./CLAUDE.md) for the product spec, content rules and build order.
 

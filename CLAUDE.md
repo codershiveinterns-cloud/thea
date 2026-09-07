@@ -1,4 +1,4 @@
-# Project: FixDesk (working name) — Windows update & error-fix blog
+# Project: Thea — Windows update & error-fix blog
 
 ## What this is
 A dynamic, SEO-first blog that publishes same-day coverage of Windows updates

@@ -11,7 +11,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-zinc-900" title="Home">
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-sm font-black text-white" aria-hidden="true">
-            F
+            T
           </span>
           {SITE.name}
         </Link>

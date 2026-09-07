@@ -4,7 +4,7 @@
  */
 
 export const SITE = {
-  name: "FixDesk",
+  name: "Thea",
   tagline: "Same-day Windows update coverage and error-code fixes",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
 } as const;

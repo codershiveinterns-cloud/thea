@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: `${SITE.tagline}. What changed in each Windows 11 update, what it broke, and step-by-step fixes reviewed by human editors.`,
     path: "/",
   }),
-  // The root layout applies a "%s · FixDesk" template; the home title already carries the site name.
+  // The root layout applies a "%s · Thea" template; the home title already carries the site name.
   title: { absolute: TITLE },
 };
 

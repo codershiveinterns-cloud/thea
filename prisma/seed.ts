@@ -15,7 +15,7 @@ const AUTHORS = [
     name: "Maya Reyes",
     slug: "maya-reyes",
     avatar: "/avatars/maya-reyes.svg",
-    bio: "Maya writes FixDesk's update coverage. She tracks every Windows 11 cumulative and feature update on the day it ships, installs it on a test PC, and reports what changed and what to watch for. Placeholder bio — replace before launch.",
+    bio: "Maya writes Thea's update coverage. She tracks every Windows 11 cumulative and feature update on the day it ships, installs it on a test PC, and reports what changed and what to watch for. Placeholder bio — replace before launch.",
     categoryFocus: ["windows-updates", "update-problems"],
     stylePrompt:
       "Voice: calm, factual, newsroom-style. Lead with what changed and who it affects. Short paragraphs, plain English, no hype. Name the exact KB and build from the sources. Prefer 'Microsoft says' over speculation. Use a bulleted change list where it helps scanning.",
