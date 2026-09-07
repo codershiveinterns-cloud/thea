@@ -42,8 +42,9 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | --- | --- | --- |
 | `DATABASE_URL` | yes | `file:./dev.db` locally. Postgres connection string at go-live. |
 | `NEXT_PUBLIC_SITE_URL` | yes | Canonical origin, no trailing slash. Used by sitemap, JSON-LD, OG images, IndexNow. |
-| `ANTHROPIC_API_KEY` | for generation | Never commit it. Without it, ingest still runs; generation stops with a clear error. |
-| `ANTHROPIC_MODEL` | for generation | Model id used by the pipeline (default `claude-opus-5`). |
+| `AI_PROVIDER` | for generation | `anthropic` or `gemini`. Defaults to whichever key is set. |
+| `AI_MODEL` | no | Model id for that provider (defaults `claude-opus-5` / `gemini-3.6-flash`). |
+| `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | for generation | Never commit or log them; `src/lib/ai.ts` redacts them from every error. Without a key, ingest still runs and generation stops with a clear error. |
 | `SCHEDULER_CRON` | no | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
 | `CRON_SECRET` | go-live | Protects `/api/cron/generate`. |
 

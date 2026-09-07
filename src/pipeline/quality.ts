@@ -54,7 +54,7 @@ export async function qualityGate(post: GeneratedPost, sourcesText: string): Pro
     effort: "medium",
     maxTokens: 4000,
     system:
-      "You are a strict fact-checker for a Windows help site. Score the ARTICLE 0–100 against the SOURCES. Deduct heavily for: any claim, KB number, build number or error code not supported by the sources (list every such identifier in hallucinatedIdentifiers); steps that are vague or wrong; missing structure (Method H2s, 'If nothing worked', FAQ); thin or repetitive content; marketing fluff. 85+ means publishable as-is. Return only JSON.",
+      "You are a strict fact-checker for a Windows help site. Score the ARTICLE 0–100 against the SOURCES. Deduct heavily for: any claim, KB number, build number or error code not supported by the sources (list every such identifier in hallucinatedIdentifiers); steps that are vague or wrong; missing structure (Method H2s and 'If nothing worked' in the body; the FAQ is a separate structured field shown after the ARTICLE body, so do not expect an FAQ heading in the body); thin or repetitive content; marketing fluff. 85+ means publishable as-is. Return only JSON.",
     user: `ARTICLE:\n${text}\n\nSOURCES:\n${sourcesText}${problems.length ? `\n\nKNOWN STRUCTURE PROBLEMS: ${problems.join("; ")}` : ""}`,
   });
   const score = Math.max(0, Math.min(100, Math.round(data.score)));

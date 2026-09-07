@@ -4,6 +4,7 @@
  */
 import { db } from "@/lib/db";
 import { CATEGORY_SLUGS, POSTS_PER_DAY_MAX, SETTING_KEYS, categoryBySlug, type CategorySlug } from "@/lib/constants";
+import { describeAi } from "@/lib/ai";
 import { pingIndexNow } from "@/lib/indexing";
 import { suggestRelatedPosts } from "@/lib/post-utils";
 import { ogImagePath } from "@/lib/seo";
@@ -225,7 +226,7 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
   let ingestReport: PipelineReport["ingest"] = { feeds: [], newKeywords: 0 };
   let items: FeedItem[] = [];
 
-  log.info("run", `posts per run ${perDay}, auto-publish ${autoPublish ? "on" : "off"}${dryRun ? ", DRY RUN" : ""}`);
+  log.info("run", `AI ${describeAi()} · posts per run ${perDay}, auto-publish ${autoPublish ? "on" : "off"}${dryRun ? ", DRY RUN" : ""}`);
   try {
     if (!opts.skipIngest) {
       const r = await ingest(feedUrlsFromSetting(settings.FEED_URLS), log, dryRun);
