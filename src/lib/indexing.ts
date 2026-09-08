@@ -1,7 +1,7 @@
 /**
  * Search-engine notifications on publish/update.
- * IndexNow is stubbed for local dev: when INDEXNOW_KEY is empty we log and return.
- * Go-live wires the key (Setting INDEXNOW_KEY) and serves /{key}.txt at the site root.
+ * The key comes from env INDEXNOW_KEY (Vercel) or Setting INDEXNOW_KEY (admin), and the same value
+ * must be served as /{key}.txt from public/. With no key set the ping is skipped and logged.
  */
 import { SITE, SETTING_KEYS } from "./constants";
 import { getSetting } from "./settings";
@@ -9,7 +9,7 @@ import { getSetting } from "./settings";
 export type IndexingResult = { attempted: boolean; ok: boolean; detail: string };
 
 export async function pingIndexNow(paths: string[]): Promise<IndexingResult> {
-  const key = (await getSetting(SETTING_KEYS.INDEXNOW_KEY)).trim();
+  const key = (process.env.INDEXNOW_KEY?.trim() || (await getSetting(SETTING_KEYS.INDEXNOW_KEY))).trim();
   const urls = paths.map((p) => (p.startsWith("http") ? p : `${SITE.url}${p}`));
   if (!key) {
     console.info("[indexing] IndexNow skipped (no INDEXNOW_KEY):", urls.join(", "));

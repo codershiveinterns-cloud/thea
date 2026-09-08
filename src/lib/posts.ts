@@ -66,12 +66,12 @@ export async function latestByCategory(perCategory = 4) {
   return Object.fromEntries(rows) as Record<(typeof CATEGORY_SLUGS)[number], PostCard[]>;
 }
 
-/** Case-insensitive (ASCII) title/quick-answer search. SQLite `contains` is already case-insensitive; Postgres will need mode:"insensitive". */
+/** Case-insensitive title/quick-answer search (Postgres ILIKE via mode: "insensitive"). */
 export async function searchPublishedPosts(q: string, take = 20) {
   const term = q.trim().slice(0, 100);
   if (term.length < 2) return [];
   return db.post.findMany({
-    where: { ...PUBLISHED, OR: [{ title: { contains: term } }, { quickAnswer: { contains: term } }] },
+    where: { ...PUBLISHED, OR: [{ title: { contains: term, mode: "insensitive" } }, { quickAnswer: { contains: term, mode: "insensitive" } }] },
     select: postCardSelect,
     orderBy: { publishedAt: "desc" },
     take,

@@ -4,12 +4,14 @@
 
 | Variable | Where | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | Vercel + local | Local: `file:./dev.db`. Production: Postgres (Supabase) connection string; then change `provider` in `prisma/schema.prisma` to `postgresql` and run `prisma migrate deploy`. |
+| `DATABASE_URL` | Vercel + local | Supabase pooled connection (pgbouncer, port 6543, `?pgbouncer=true`). Used by the app at runtime. |
+| `DIRECT_URL` | Vercel + local | Supabase direct connection (port 5432). Used by `prisma migrate deploy`. |
+| `INDEXNOW_KEY` | Vercel | Must equal the filename of `public/<key>.txt`. |
 | `NEXT_PUBLIC_SITE_URL` | Vercel + local | Canonical origin, no trailing slash. Drives canonicals, sitemap, OG images, JSON-LD, IndexNow. |
 | `AI_PROVIDER` | Vercel + local | `anthropic` or `gemini`. |
 | `AI_MODEL` | optional | Model id for the provider (defaults `claude-opus-5` / `gemini-3.6-flash`). |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | Vercel + local | Never committed, never logged (every error message is scrubbed). |
-| `CRON_SECRET` | Vercel | Required in production: `/api/cron/generate` rejects requests without `Authorization: Bearer <CRON_SECRET>`. |
+| `CRON_SECRET` | Vercel + local | Required everywhere: `/api/cron/generate` returns 503 when unset and 401 without `Authorization: Bearer <CRON_SECRET>`. |
 | `LOG_LEVEL` | optional | `debug` \| `info` \| `warn` \| `error` (default `info` in production). Logs are one JSON line per event. |
 | `SCHEDULER_CRON` | local only | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
 
@@ -19,19 +21,13 @@ Runtime settings live in the `Setting` table and are edited at `/admin/settings`
 
 Local: `npm run scheduler` (node-cron, 09:00 local; first post immediately, the rest 2–3 h apart).
 
-Vercel: add to `vercel.json`
-
-```json
-{ "crons": [{ "path": "/api/cron/generate", "schedule": "0 9 * * *" }] }
-```
-
-Vercel Cron sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set. To space posts through the day on Vercel, add more entries (e.g. `0 9,12,15 * * *`) — each run creates at most one post per category over the daily cap.
+Vercel: `vercel.json` runs `/api/cron/generate` daily at **03:30 UTC** (`30 3 * * *`). Vercel sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set on the project. Each run creates up to `POSTS_PER_DAY` posts; to spread them through the day add more cron entries (Pro plan; Hobby allows one daily cron).
 
 ## Go-live steps (CLAUDE.md phase 5)
 
-1. Create the Postgres database, set `DATABASE_URL`, switch the Prisma provider, run migrations and `npm run db:seed`.
-2. Deploy to Vercel with the variables above. Confirm `/robots.txt`, `/sitemap.xml`, `/feed.xml` and one post render.
-3. In `/admin/settings`: paste the Search Console verification content (renders as `<meta name="google-site-verification">`), the GA4 measurement id (renders the gtag snippet after hydration), and the IndexNow key. Serve `/{key}.txt` at the root (drop the file into `public/`).
+1. Done: Prisma runs on Supabase Postgres (`prisma/migrations/*_init` applied), categories and authors seeded (`npm run db:seed:minimal`). Future schema changes: edit the schema, `npx prisma migrate dev --name <change>` locally, and Vercel runs `npm run db:migrate` in the build step (add it to the Build Command: `npm run db:migrate && npm run build`).
+2. Deploy to Vercel with the variables above; connect `thea.global` and `www.thea.global` (www redirects to the apex in `next.config.ts`). Confirm `/robots.txt`, `/sitemap.xml`, `/feed.xml` and one post render.
+3. In `/admin/settings`: paste the Search Console verification content (renders as `<meta name="google-site-verification">`) and the GA4 measurement id. The IndexNow key is env `INDEXNOW_KEY` and is served from `public/<key>.txt` (already in the repo).
 4. Submit `/sitemap.xml` in Search Console.
 5. Write the three real author bios in `/admin/authors` (the seed bios are placeholders and say so publicly).
 6. Add feed URLs for the Windows 11 update-history hub and release-health page if Microsoft moves them (defaults are in `src/pipeline/sources/feeds.ts`).

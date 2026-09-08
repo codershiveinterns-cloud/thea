@@ -1,6 +1,7 @@
 /**
- * Idempotent seed: 5 categories, 3 authors, 5 keywords, plus 3 sample posts so the
- * admin has something to edit. Safe to re-run (upserts by slug/phrase).
+ * Idempotent seed: 5 categories, 3 authors, and — unless SEED_MINIMAL=1 — 5 keywords plus 3 sample
+ * posts so the admin has something to edit. Safe to re-run (upserts by slug/phrase).
+ * Production: `SEED_MINIMAL=1 npx prisma db seed` seeds categories and authors only.
  *
  * Author bios are honest placeholders — replace them with real bios before launch.
  * Identifiers in sample posts (0x800f0922, 25H2) come from CLAUDE.md, not invented.
@@ -100,6 +101,11 @@ async function main() {
       create: { ...a },
     });
     authorIds[a.slug] = row.id;
+  }
+
+  if (process.env.SEED_MINIMAL === "1") {
+    console.log("Seed complete (minimal):", { categories: await db.category.count(), authors: await db.author.count() });
+    return;
   }
 
   // Keywords

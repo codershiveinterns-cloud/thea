@@ -2,12 +2,12 @@
 
 SEO-first blog covering Windows updates (what changed, what broke, how to fix it) and error-code fixes for the newest Windows builds. See [CLAUDE.md](./CLAUDE.md) for the product spec, content rules and build order.
 
-**Current stage: local only.** No hosting, no cloud DB, no auth. `/admin` is open on localhost.
+**Stage: go-live.** Postgres on Supabase, deployed on Vercel at https://thea.global. `/admin` still has no auth — protect it (Vercel password protection or a proxy) until auth lands.
 
 ## Stack
 
 - Next.js 15 (App Router, TypeScript, Tailwind v4)
-- Prisma 6 on SQLite for local dev (schema is Postgres-compatible; go-live switches `DATABASE_URL`)
+- Prisma 6 on Postgres (Supabase): pooled `DATABASE_URL` at runtime, `DIRECT_URL` for migrations
 - Zod for every external input
 - Anthropic API for generation (phase 3)
 
@@ -15,9 +15,9 @@ SEO-first blog covering Windows updates (what changed, what broke, how to fix it
 
 ```bash
 npm install            # also runs `prisma generate`
-cp .env.example .env   # defaults work as-is for local dev
-npm run db:push        # create prisma/dev.db from the schema
-npm run db:seed        # 5 categories, 3 authors, 5 keywords, 3 sample posts
+cp .env.example .env   # fill in the Supabase URLs and an AI key
+npm run db:migrate     # apply prisma/migrations to the database
+npm run db:seed        # 5 categories, 3 authors, 5 keywords, 3 sample posts (db:seed:minimal = categories + authors only)
 npm run dev            # http://localhost:3000  (admin at /admin)
 ```
 
@@ -28,9 +28,9 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `npm run dev` | Next dev server (Turbopack) |
 | `npm run build` / `npm start` | Production build / serve |
 | `npm run lint` / `npm run typecheck` | ESLint / `tsc --noEmit` |
-| `npm run db:push` | Sync `prisma/schema.prisma` to the SQLite file |
-| `npm run db:seed` | Idempotent seed (`prisma/seed.ts`) |
-| `npm run db:reset` | Drop, recreate and reseed the local DB |
+| `npm run db:migrate` | `prisma migrate deploy` — apply committed migrations |
+| `npm run db:push` | Sync the schema without a migration (dev only) |
+| `npm run db:seed` / `db:seed:minimal` | Idempotent seed (`prisma/seed.ts`); minimal = categories and authors only |
 | `npm run db:studio` | Prisma Studio |
 | `npm run generate` | Run the content pipeline once. Flags: `-- --dry-run`, `-- --limit 1`, `-- --skip-ingest`, `-- --keyword "phrase" --category error-codes`, `-- --list-refresh` |
 | `npm run scheduler` | Local daily scheduler (node-cron, 09:00 local; `-- --now` runs today's batch immediately) |
@@ -40,13 +40,15 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | yes | `file:./dev.db` locally. Postgres connection string at go-live. |
+| `DATABASE_URL` | yes | Supabase pooled connection (port 6543, `?pgbouncer=true`). |
+| `DIRECT_URL` | yes | Supabase direct connection (port 5432) for migrations. |
 | `NEXT_PUBLIC_SITE_URL` | yes | Canonical origin, no trailing slash. Used by sitemap, JSON-LD, OG images, IndexNow. |
 | `AI_PROVIDER` | for generation | `anthropic` or `gemini`. Defaults to whichever key is set. |
 | `AI_MODEL` | no | Model id for that provider (defaults `claude-opus-5` / `gemini-3.6-flash`). |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | for generation | Never commit or log them; `src/lib/ai.ts` redacts them from every error. Without a key, ingest still runs and generation stops with a clear error. |
 | `SCHEDULER_CRON` | no | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
-| `CRON_SECRET` | go-live | Protects `/api/cron/generate`. |
+| `CRON_SECRET` | yes | `/api/cron/generate` refuses every call without it. |
+| `INDEXNOW_KEY` | go-live | Same value as the `public/<key>.txt` filename. |
 
 Runtime settings that an editor changes (posts per day, auto-publish, ad slot HTML, IndexNow key, GA4 id, Search Console tag) live in the `Setting` table and are edited at `/admin/settings`, not in env.
 
@@ -120,4 +122,4 @@ See [LAUNCH.md](./LAUNCH.md) for the go-live checklist, cron setup, how to add a
 2. ✅ Public site + SEO + OG images + Lighthouse ≥ 95
 3. ✅ Pipeline + `npm run generate` + scheduler + quality gate + tests
 4. ✅ Polish: error boundaries, structured logging, sanitisation, security headers, run history, LAUNCH.md
-5. Go-live (Vercel, Postgres, IndexNow, cron)
+5. ✅ Go-live: Supabase Postgres, Vercel cron 03:30 UTC, CRON_SECRET enforced, IndexNow key file, www → apex redirect

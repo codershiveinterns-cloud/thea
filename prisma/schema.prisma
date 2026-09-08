@@ -1,14 +1,14 @@
-// Thea data model.
-// Local dev runs on SQLite; the schema uses only types that map 1:1 to Postgres
-// (enums, Json, DateTime) so switching DATABASE_URL + provider later needs no model changes.
+// Thea data model — Postgres (Supabase). DATABASE_URL is the pooled (pgbouncer) connection used at
+// runtime; DIRECT_URL is the session connection Prisma Migrate uses. Types are plain enums/Json/DateTime.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum PostStatus {
