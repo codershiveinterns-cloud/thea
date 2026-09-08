@@ -5,30 +5,12 @@
 import { SITE } from "@/lib/constants";
 import { allPublishedForIndex } from "@/lib/posts";
 import { absoluteUrl, postPath } from "@/lib/seo";
+import { xmlEscape } from "@/lib/xml";
 
 export const revalidate = 3600;
 
 const FEED_ITEMS = 30;
 
-/** Escape a text node for XML and drop characters that are illegal in XML 1.0. */
-function xmlEscape(value: string): string {
-  return value
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, "")
-    .replace(/[<>&'"]/g, (c) => {
-      switch (c) {
-        case "<":
-          return "&lt;";
-        case ">":
-          return "&gt;";
-        case "&":
-          return "&amp;";
-        case "'":
-          return "&apos;";
-        default:
-          return "&quot;";
-      }
-    });
-}
 
 export async function GET() {
   const posts = (await allPublishedForIndex()).slice(0, FEED_ITEMS);
