@@ -6,7 +6,7 @@ const good = {
   title: "How to fix error 0x800f0922 in Windows 11",
   slug: "Fix 0x800f0922 Windows 11!",
   quickAnswer: "Run the Windows Update troubleshooter first, then repair system files with DISM and SFC before retrying the update.",
-  body: `Intro paragraph about the error.\n\n## Method 1: Run the troubleshooter\n\n1. Open Settings.\n2. Run it.\n\n## Method 2: DISM and SFC\n\n1. Open Terminal.\n2. Run DISM.\n\n## If nothing worked\n\nInstall manually.\n${"word ".repeat(120)}`,
+  body: `Intro paragraph about the error.\n\n## Method 1: Run the troubleshooter\n\n1. Open Settings.\n2. Run it.\n\n## Method 2: DISM and SFC\n\n1. Open Terminal.\n2. Run DISM.\n\n## Method 3: Free space\n\n1. Open Disk Management.\n\n## If nothing worked\n\nInstall manually.\n${"word ".repeat(650)}`,
   affectedBuilds: ["Windows 11 24H2"],
   faq: [
     { question: "What does 0x800f0922 mean?", answer: "It is a Windows Update failure code." },
@@ -35,6 +35,10 @@ describe("generatedPostSchema", () => {
   });
   it("rejects a body without Method 1 or If nothing worked", () => {
     expect(generatedPostSchema.safeParse({ ...good, body: "## Steps\n" + "word ".repeat(200) }).success).toBe(false);
+  });
+  it("rejects fewer than 3 methods or a body under the word floor", () => {
+    expect(generatedPostSchema.safeParse({ ...good, body: good.body.replace("## Method 3: Free space\n\n1. Open Disk Management.\n\n", "") }).success).toBe(false);
+    expect(generatedPostSchema.safeParse({ ...good, body: good.body.replace("word ".repeat(650), "word ".repeat(300)) }).success).toBe(false);
   });
   it("rejects raw HTML in the body", () => {
     expect(generatedPostSchema.safeParse({ ...good, body: good.body + "\n<script>alert(1)</script>" }).success).toBe(false);

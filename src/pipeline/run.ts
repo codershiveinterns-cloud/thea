@@ -27,6 +27,8 @@ export type RunOptions = {
   keywordId?: string;
   /** Skip feed ingestion (e.g. the scheduler already ingested this morning). */
   skipIngest?: boolean;
+  /** Ingest feeds, queue keywords, then stop. */
+  ingestOnly?: boolean;
   quiet?: boolean;
 };
 
@@ -233,8 +235,8 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
       ingestReport = { feeds: r.feeds, newKeywords: r.newKeywords };
       items = r.items;
     }
-    const selected = await loadSelection(perDay, opts.keywordId);
-    log.info("select", selected.length ? selected.map((k) => `"${k.phrase}" [${k.categorySlug}]`).join("; ") : "no queued keywords eligible");
+    const selected = opts.ingestOnly ? [] : await loadSelection(perDay, opts.keywordId);
+    if (!opts.ingestOnly) log.info("select", selected.length ? selected.map((k) => `"${k.phrase}" [${k.categorySlug}]`).join("; ") : "no queued keywords eligible");
     const last = await db.post.findFirst({ where: { generatedBy: "AI" }, orderBy: { createdAt: "desc" }, select: { authorId: true } });
     let lastAuthorId = last?.authorId ?? null;
     for (const kw of selected) {

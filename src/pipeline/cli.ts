@@ -4,6 +4,7 @@
  *   --limit N        posts this run (1–3)
  *   --keyword "…"    queue (if needed) and generate this exact phrase in --category <slug>
  *   --skip-ingest    don't fetch feeds first
+ *   --ingest-only    fetch feeds and queue keywords, generate nothing
  */
 import { db } from "@/lib/db";
 import { runPipeline, summarizeReport, isCategorySlug } from "./run";
@@ -32,6 +33,7 @@ async function main() {
     limit: arg("--limit") ? Number(arg("--limit")) : undefined,
     keywordId,
     skipIngest: has("--skip-ingest"),
+    ingestOnly: has("--ingest-only"),
   });
   console.log(`\n${summarizeReport(report)}  tokens in/out: ${report.usage.inputTokens}/${report.usage.outputTokens}`);
   process.exitCode = report.ok ? 0 : 1;

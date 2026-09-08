@@ -26,7 +26,8 @@ describe("structureProblems", () => {
     expect(p).toContain('No "## If nothing worked" section');
     expect(p).toContain("Only 1 FAQ items");
     expect(p).toContain("Body contains an H1");
-    expect(p).toContain("Body under 250 words (thin)");
+    expect(p).toContain("Body under 700 words (thin)");
+    expect(p).toContain("Only 1 Method sections (need 3+)");
   });
 });
 

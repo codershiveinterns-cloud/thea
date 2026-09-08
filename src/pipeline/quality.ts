@@ -30,10 +30,10 @@ export function postToText(post: GeneratedPost): string {
 export function structureProblems(post: GeneratedPost): string[] {
   const problems: string[] = [];
   const methods = post.body.match(/^##\s+Method\s+\d+/gm) ?? [];
-  if (methods.length < 1) problems.push('No "## Method 1:" heading');
+  if (methods.length < 3) problems.push(`Only ${methods.length} Method sections (need 3+)`);
   if (!/^##\s+If nothing worked/m.test(post.body)) problems.push('No "## If nothing worked" section');
   if (post.faq.length < FAQ_MIN) problems.push(`Only ${post.faq.length} FAQ items`);
-  if (post.body.split(/\s+/).length < 250) problems.push("Body under 250 words (thin)");
+  if (post.body.split(/\s+/).length < 700) problems.push("Body under 700 words (thin)");
   if (/^#\s/m.test(post.body)) problems.push("Body contains an H1");
   return problems;
 }

@@ -8,6 +8,9 @@ import { FAQ_MAX, FAQ_MIN } from "@/lib/constants";
 import { slugify } from "@/lib/slug";
 import { faqItemSchema } from "@/lib/validation";
 
+/** Hard floor enforced after generation (the prompt asks for 700+). */
+export const MIN_BODY_WORDS = 600;
+
 /** Loose shape sent to the API as the output format (structured outputs support a JSON-schema subset). */
 export const generatedPostOutput = z.object({
   title: z.string(),
@@ -30,6 +33,8 @@ export const generatedPostSchema = z.object({
     .string()
     .trim()
     .min(400)
+    .refine((b) => (b.match(/^##\s+Method\s+\d+/gm) ?? []).length >= 3, "Body must contain at least 3 \"## Method N:\" sections")
+    .refine((b) => b.split(/\s+/).length >= MIN_BODY_WORDS, `Body must be at least ${MIN_BODY_WORDS} words`)
     .refine((b) => /^##\s+Method\s+1\b/m.test(b), 'Body must contain "## Method 1: …"')
     .refine((b) => /^##\s+If nothing worked/m.test(b), 'Body must contain "## If nothing worked"')
     .refine((b) => !/<\/?[a-z][^>]*>/i.test(b), "Body must be markdown without raw HTML"),
@@ -44,7 +49,7 @@ export type GeneratedPost = z.infer<typeof generatedPostSchema>;
 export const POST_STRUCTURE_RULES = `Every article follows this exact structure:
 - title: the target keyword phrased naturally (this becomes the H1; do not repeat it as a heading in the body).
 - quickAnswer: 2–3 sentences that answer the title outright.
-- body: markdown only, no HTML. Start with one short paragraph that says what the problem/update is. Then one H2 per fix or section, in order: "## Method 1: …", "## Method 2: …" (2–5 methods, each with numbered steps saying exactly where to click and what the screen shows), and finally "## If nothing worked". For a "What's new" release article, use "## Method N:" headings for "How to install" / "How to check your build" and put the change list in the intro as bullet points. Never use H1 (#) in the body.
+- body: markdown only, no HTML, at least 700 words (aim for 800–1200). Start with one or two paragraphs that say what the problem/update is, who it affects and why it happens. Then one H2 per fix or section, in order: "## Method 1: …", "## Method 2: …", "## Method 3: …" (at least 3 methods, up to 6, each with numbered steps saying exactly where to click and what the screen shows, plus a sentence on when to use that method and what to expect afterwards), and finally "## If nothing worked". For a "What's new" release article, use "## Method N:" headings for "How to install" / "How to check your build" and put the change list in the intro as bullet points. Never use H1 (#) in the body.
 - affectedBuilds: the Windows versions/builds the article applies to, copied from the sources (e.g. "Windows 11 24H2", "Build 26100.6584").
 - faq: ${FAQ_MIN}–${FAQ_MAX} questions a reader would type into Google, each answered in 1–3 sentences.
 - metaTitle (≤ 70 chars) and metaDescription (≤ 170 chars) for search results.
