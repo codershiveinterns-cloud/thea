@@ -3,6 +3,7 @@
  * Authors CRUD server actions. Every input goes through authorInputSchema;
  * categoryFocus is written to the Json column as a plain string[] of category slugs.
  */
+import { logger } from "@/lib/log";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
@@ -11,6 +12,8 @@ import { db } from "@/lib/db";
 import { fdOptional, fdString } from "@/lib/form";
 import { authorInputSchema, fieldErrors } from "@/lib/validation";
 import { failResult, okResult, type ActionResult } from "./types";
+
+const log = logger("admin:authors");
 
 export type AuthorFormState = ActionResult<{ id: string }>;
 
@@ -76,7 +79,7 @@ export async function saveAuthor(prevState: AuthorFormState | null, formData: Fo
       await db.author.update({ where: { id }, data });
     } catch (err) {
       if (isUniqueViolation(err)) return failResult("Please fix the highlighted fields.", slugTaken);
-      console.error("[authors] update failed", err);
+      log.error("update failed", { error: err });
       return failResult("Could not save the author. Check the server log.");
     }
     revalidateAuthorPaths(id, existing.slug, input.slug);
@@ -89,7 +92,7 @@ export async function saveAuthor(prevState: AuthorFormState | null, formData: Fo
     createdId = created.id;
   } catch (err) {
     if (isUniqueViolation(err)) return failResult("Please fix the highlighted fields.", slugTaken);
-    console.error("[authors] create failed", err);
+    log.error("create failed", { error: err });
     return failResult("Could not create the author. Check the server log.");
   }
   revalidateAuthorPaths(createdId, input.slug);
@@ -114,7 +117,7 @@ export async function deleteAuthor(id: string): Promise<ActionResult> {
   try {
     await db.author.delete({ where: { id: authorId } });
   } catch (err) {
-    console.error("[authors] delete failed", err);
+    log.error("delete failed", { error: err });
     return failResult("Could not delete the author. Check the server log.");
   }
   revalidateAuthorPaths(authorId, author.slug);

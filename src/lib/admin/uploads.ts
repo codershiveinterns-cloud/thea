@@ -3,11 +3,14 @@
  * Image upload used by the post editor (screenshots, featured image) and author avatars.
  * FormData fields: `file` (File), `folder` (screenshots | featured | avatars).
  */
+import { logger } from "@/lib/log";
 import { z } from "zod";
 import { storage, StorageError } from "@/lib/storage";
 import type { ActionResult } from "./types";
 
 const folderSchema = z.enum(["screenshots", "featured", "avatars"]).default("screenshots");
+
+const log = logger("admin:uploads");
 
 export async function uploadImage(formData: FormData): Promise<ActionResult<{ url: string }>> {
   const file = formData.get("file");
@@ -19,7 +22,7 @@ export async function uploadImage(formData: FormData): Promise<ActionResult<{ ur
     return { ok: true, data: { url: stored.url }, message: `Uploaded ${stored.originalName}` };
   } catch (err) {
     if (err instanceof StorageError) return { ok: false, message: err.message };
-    console.error("[uploads] failed", err);
+    log.error("failed", { error: err });
     return { ok: false, message: "Upload failed. Check the server log." };
   }
 }

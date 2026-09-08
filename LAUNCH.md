@@ -1,0 +1,74 @@
+# Thea — launch checklist and runbook
+
+## Environment variables
+
+| Variable | Where | Notes |
+| --- | --- | --- |
+| `DATABASE_URL` | Vercel + local | Local: `file:./dev.db`. Production: Postgres (Supabase) connection string; then change `provider` in `prisma/schema.prisma` to `postgresql` and run `prisma migrate deploy`. |
+| `NEXT_PUBLIC_SITE_URL` | Vercel + local | Canonical origin, no trailing slash. Drives canonicals, sitemap, OG images, JSON-LD, IndexNow. |
+| `AI_PROVIDER` | Vercel + local | `anthropic` or `gemini`. |
+| `AI_MODEL` | optional | Model id for the provider (defaults `claude-opus-5` / `gemini-3.6-flash`). |
+| `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | Vercel + local | Never committed, never logged (every error message is scrubbed). |
+| `CRON_SECRET` | Vercel | Required in production: `/api/cron/generate` rejects requests without `Authorization: Bearer <CRON_SECRET>`. |
+| `LOG_LEVEL` | optional | `debug` \| `info` \| `warn` \| `error` (default `info` in production). Logs are one JSON line per event. |
+| `SCHEDULER_CRON` | local only | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
+
+Runtime settings live in the `Setting` table and are edited at `/admin/settings`: posts per day, auto-publish, scheduler on/off, feed URLs, ad slot HTML, IndexNow key, GA4 id, Search Console tag.
+
+## Cron schedule
+
+Local: `npm run scheduler` (node-cron, 09:00 local; first post immediately, the rest 2–3 h apart).
+
+Vercel: add to `vercel.json`
+
+```json
+{ "crons": [{ "path": "/api/cron/generate", "schedule": "0 9 * * *" }] }
+```
+
+Vercel Cron sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set. To space posts through the day on Vercel, add more entries (e.g. `0 9,12,15 * * *`) — each run creates at most one post per category over the daily cap.
+
+## Go-live steps (CLAUDE.md phase 5)
+
+1. Create the Postgres database, set `DATABASE_URL`, switch the Prisma provider, run migrations and `npm run db:seed`.
+2. Deploy to Vercel with the variables above. Confirm `/robots.txt`, `/sitemap.xml`, `/feed.xml` and one post render.
+3. In `/admin/settings`: paste the Search Console verification content (renders as `<meta name="google-site-verification">`), the GA4 measurement id (renders the gtag snippet after hydration), and the IndexNow key. Serve `/{key}.txt` at the root (drop the file into `public/`).
+4. Submit `/sitemap.xml` in Search Console.
+5. Write the three real author bios in `/admin/authors` (the seed bios are placeholders and say so publicly).
+6. Add feed URLs for the Windows 11 update-history hub and release-health page if Microsoft moves them (defaults are in `src/pipeline/sources/feeds.ts`).
+7. Leave `AUTO_PUBLISH` off until a few days of runs have been reviewed by hand.
+
+## How to add an author
+
+`/admin/authors` → New author. Name, slug (auto), avatar (upload or path), an honest bio (shown publicly), category focus (drives assignment), and a style prompt (injected into the generation system prompt). Authors with no matching focus never get posts.
+
+## How to review a post
+
+1. Dashboard → Review queue (or `/admin/posts?status=REVIEW`). Posts show their quality score; under 85 is marked "needs work".
+2. Open the post. Check the quick answer, the numbered methods, the FAQ and the quality notes (unsupported identifiers are listed there).
+3. Add real screenshots, set "Tested on" build and the last-verified date.
+4. Approve, then Publish. Publishing runs the publish check (structure, meta, FAQ count, a featured image or screenshot), revalidates the public site and pings IndexNow when a key is set.
+5. Posts published by the pipeline with `AUTO_PUBLISH` on appear in "Published — verify" until a tested-on build is set; the public page shows "Verified: pending" until then.
+
+## When a feed source changes
+
+Ingest is tolerant: a feed that fails or returns no items is logged as a warning and the run continues. Symptoms of a moved source: "Page had no recognisable update/issue entries" in the run log, or zero new keywords for days.
+
+1. Open the page in a browser and find the new URL (the update-history hub, the release-health status page for the current version, or the Insider RSS).
+2. Paste the new URL into `/admin/settings` → Feeds (one per line). RSS/Atom is auto-detected; HTML pages use the scrapers in `src/pipeline/sources/feeds.ts` (`parseHtmlSource`).
+3. If Microsoft changed the page markup, adjust `parseHtmlSource` and its tests in `src/pipeline/__tests__/feeds.test.ts`.
+4. Run `npm run generate -- --ingest-only` and check the queue at `/admin/keywords`.
+
+## Operations
+
+- Every run is recorded: the last report on the dashboard, the last 20 summaries under "Recent pipeline runs" (with errors), and full logs on stdout as JSON lines.
+- `npm run generate -- --dry-run --limit 1` generates without writing anything — use it after changing prompts or feeds.
+- Security: `/admin` has no auth yet (deferred by CLAUDE.md) — put it behind Vercel password protection or a proxy until auth lands. Server actions are same-origin only (Next.js checks the `Origin` header). Markdown never renders raw HTML and unsafe URL schemes are dropped. Ad slot HTML is injected verbatim — paste only your own ad code. Security headers (`nosniff`, `SAMEORIGIN`, referrer policy, permissions policy) are set in `next.config.ts`.
+
+## Not implemented yet (from CLAUDE.md)
+
+- Auth for `/admin` (deferred).
+- Supabase Storage adapter (`src/lib/storage.ts` is local disk; the interface is ready).
+- IndexNow key file at `/{key}.txt` (serve from `public/` at go-live) — the ping itself is wired.
+- Weekly re-verification job for posts older than 90 days.
+- Author-page pagination beyond 50 posts.
+- macOS / iOS / Android categories and email subscribe (deferred).

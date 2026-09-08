@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { Inter, Sora } from "next/font/google";
-import { SITE } from "@/lib/constants";
+import { SETTING_KEYS, SITE } from "@/lib/constants";
 import { DEFAULT_ROBOTS } from "@/lib/seo";
+import { getSetting } from "@/lib/settings";
 import "./globals.css";
 
 // One display face for headlines, one readable body face. Both self-hosted by next/font, swapped in without layout shift.
 const sora = Sora({ variable: "--font-sora", subsets: ["latin"], weight: ["600", "700"], display: "swap" });
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: { default: `${SITE.name} — ${SITE.tagline}`, template: `%s · ${SITE.name}` },
   description: SITE.tagline,
@@ -18,6 +19,12 @@ export const metadata: Metadata = {
   openGraph: { siteName: SITE.name, locale: "en_US", type: "website" },
   twitter: { card: "summary_large_image" },
 };
+
+/** Search Console verification tag comes from Settings (empty until go-live). */
+export async function generateMetadata(): Promise<Metadata> {
+  const gsc = (await getSetting(SETTING_KEYS.GSC_VERIFICATION)).trim();
+  return gsc ? { ...baseMetadata, verification: { google: gsc } } : baseMetadata;
+}
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

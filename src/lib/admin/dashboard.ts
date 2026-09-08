@@ -4,7 +4,7 @@
  * server component. Mutations live in the sibling src/lib/admin/* action files.
  */
 import { QUALITY_GATE_MIN } from "@/lib/constants";
-import { summarizeReport } from "@/pipeline/run";
+import { parseRunHistory, summarizeReport, type RunHistoryEntry } from "@/pipeline/run";
 import type { PipelineReport } from "@/pipeline/log";
 import type { PostStatus } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -58,6 +58,7 @@ export type LastRun = { finishedAt: string; ok: boolean; dryRun: boolean; summar
 
 export type DashboardData = {
   lastRun: LastRun;
+  runHistory: RunHistoryEntry[];
   statusCounts: StatusCounts;
   reviewQueue: ReviewQueueItem[];
   verifyQueue: VerifyQueueItem[];
@@ -138,6 +139,10 @@ async function getDashboardSettings(): Promise<DashboardSettings> {
   };
 }
 
+async function getRunHistory(): Promise<RunHistoryEntry[]> {
+  return parseRunHistory((await getAllSettings()).PIPELINE_RUN_HISTORY).slice(0, 8);
+}
+
 async function getLastRun(): Promise<LastRun> {
   const raw = (await getAllSettings()).PIPELINE_LAST_RUN;
   if (!raw) return null;
@@ -156,7 +161,7 @@ async function getLastRun(): Promise<LastRun> {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const [statusCounts, reviewQueue, verifyQueue, queuedCount, next, recentActivity, settings, lastRun] = await Promise.all([
+  const [statusCounts, reviewQueue, verifyQueue, queuedCount, next, recentActivity, settings, lastRun, runHistory] = await Promise.all([
     getStatusCounts(),
     getReviewQueue(),
     getVerifyQueue(),
@@ -165,6 +170,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     getRecentActivity(),
     getDashboardSettings(),
     getLastRun(),
+    getRunHistory(),
   ]);
 
   return {
@@ -175,5 +181,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     recentActivity,
     settings,
     lastRun,
+    runHistory,
   };
 }

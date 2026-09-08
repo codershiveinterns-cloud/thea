@@ -2,6 +2,7 @@
 /**
  * Entry points the admin UI calls into the content pipeline (src/pipeline).
  */
+import { logger } from "@/lib/log";
 import { db } from "@/lib/db";
 import { isAiConfigured } from "@/lib/ai";
 import { splitH2Sections } from "@/lib/post-utils";
@@ -10,6 +11,8 @@ import { generateSection } from "@/pipeline/generate";
 import { research } from "@/pipeline/research";
 import { runPipeline, summarizeReport } from "@/pipeline/run";
 import { revalidatePath } from "next/cache";
+
+const log = logger("admin:pipeline");
 
 export type PipelineRunResult = { ok: boolean; message: string; createdPostIds: string[] };
 
@@ -31,7 +34,7 @@ export async function runPipelineNow(): Promise<PipelineRunResult> {
       createdPostIds: ids,
     };
   } catch (err) {
-    console.error("[pipeline] run failed", err);
+    log.error("run failed", { error: err });
     return { ok: false, message: `Pipeline failed: ${(err as Error).message}`, createdPostIds: [] };
   }
 }

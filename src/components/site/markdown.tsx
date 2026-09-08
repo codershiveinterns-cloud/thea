@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { safeUrl } from "@/lib/sanitize";
 import { slugify } from "@/lib/slug";
 import { splitH2Sections } from "@/lib/post-utils";
 import { AdSlot } from "./ad-slot";
@@ -107,7 +108,7 @@ export function Markdown({ content, className = "" }: { content: string; classNa
   const used = new Map<string, number>();
   return (
     <div className={`${PROSE} ${className}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={makeComponents(used)}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml urlTransform={safeUrl} components={makeComponents(used)}>
         {content}
       </ReactMarkdown>
     </div>
@@ -128,7 +129,7 @@ export function PostBody({ body }: { body: string }) {
     <div className={PROSE}>
       {intro ? (
         <div className="text-lg leading-8 [&>p:first-child]:mt-0">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={components}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml urlTransform={safeUrl} components={components}>
             {intro}
           </ReactMarkdown>
         </div>
@@ -136,7 +137,7 @@ export function PostBody({ body }: { body: string }) {
       {sections.map((s) => (
         <section key={s.index} className={s.index > 0 ? "border-t border-line" : ""}>
           {s.index === adBefore ? <AdSlot placement="mid-article" /> : null}
-          <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={components}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml urlTransform={safeUrl} components={components}>
             {`## ${s.heading}\n\n${s.content}`}
           </ReactMarkdown>
         </section>

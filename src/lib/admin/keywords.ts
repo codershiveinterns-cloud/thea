@@ -6,6 +6,7 @@
  * (source MANUAL); the feed ingester adds its own with source FEED. Phrases are deduped
  * case-insensitively with internal whitespace collapsed, on top of the DB unique index.
  */
+import { logger } from "@/lib/log";
 import { Prisma, type KeywordStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -16,6 +17,8 @@ import { failResult, okResult, type ActionResult } from "./types";
 
 /** Upper bound for one bulk paste so a stray file dump can't hammer the DB. */
 const BULK_MAX = 200;
+
+const log = logger("admin:keywords");
 
 export type AddKeywordData = { id: string; phrase: string };
 export type BulkAddData = {
@@ -114,7 +117,7 @@ export async function addKeyword(
         phrase: winner ? duplicateMessage(winner) : "Already in the queue.",
       });
     }
-    console.error("[keywords] add failed", err);
+    log.error("add failed", { error: err });
     return failResult("Could not save the keyword. Check the server log.");
   }
 }
@@ -182,7 +185,7 @@ export async function addKeywordsBulk(
         duplicates.push(data.phrase);
         continue;
       }
-      console.error("[keywords] bulk add failed", err);
+      log.error("bulk add failed", { error: err });
       if (added > 0) revalidate();
       return failResult(
         `Stopped after adding ${added} keyword${added === 1 ? "" : "s"}: a save failed. Check the server log.`,
@@ -214,7 +217,7 @@ export async function setKeywordStatus(id: string, status: KeywordStatus): Promi
     return { ok: true, message: `"${row.phrase}" ${STATUS_VERB[row.status]}.` };
   } catch (err) {
     if (isNotFound(err)) return failResult("That keyword no longer exists.");
-    console.error("[keywords] status update failed", err);
+    log.error("status update failed", { error: err });
     return failResult("Could not update the keyword. Check the server log.");
   }
 }
@@ -230,7 +233,7 @@ export async function deleteKeyword(id: string): Promise<ActionResult> {
     return { ok: true, message: `Deleted "${row.phrase}".` };
   } catch (err) {
     if (isNotFound(err)) return failResult("That keyword was already deleted.");
-    console.error("[keywords] delete failed", err);
+    log.error("delete failed", { error: err });
     return failResult("Could not delete the keyword. Check the server log.");
   }
 }

@@ -29,6 +29,43 @@ export default async function AdminDashboardPage() {
 
       <StatCards counts={data.statusCounts} />
 
+      {data.runHistory.length > 0 ? (
+        <details className="mt-6 rounded-lg border border-zinc-200 bg-white">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-zinc-900">Recent pipeline runs ({data.runHistory.length})</summary>
+          <div className="overflow-x-auto border-t border-zinc-100">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wide text-zinc-500">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Finished</th>
+                  <th className="px-4 py-2 font-medium">Result</th>
+                  <th className="px-4 py-2 font-medium">Summary</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {data.runHistory.map((r) => (
+                  <tr key={r.finishedAt} className="align-top">
+                    <td className="whitespace-nowrap px-4 py-2 text-zinc-600">{formatDateTime(r.finishedAt)}</td>
+                    <td className="px-4 py-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${r.ok ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-red-50 text-red-800 ring-red-200"}`}>{r.ok ? "OK" : "Failed"}</span>
+                    </td>
+                    <td className="px-4 py-2 text-zinc-700">
+                      {r.summary}
+                      {r.errors.length ? (
+                        <ul className="mt-1 list-disc pl-4 text-xs text-red-700">
+                          {r.errors.map((e) => (
+                            <li key={e}>{e}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ) : null}
+
       {data.lastRun ? (
         <div className="mt-6">
           <Notice kind={data.lastRun.ok ? "success" : "warning"}>

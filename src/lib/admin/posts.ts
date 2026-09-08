@@ -6,6 +6,7 @@
  * The client-safe serializer lives in src/components/admin/post-editor/serialize.ts
  * ("use server" modules may only export async functions).
  */
+import { logger } from "@/lib/log";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { PostStatus, Prisma } from "@prisma/client";
@@ -122,7 +123,7 @@ async function persistPost(postId: string | null, fd: FormData): Promise<Persist
     });
     return { ok: true, id: created.id };
   } catch (err) {
-    console.error("[posts] save failed", err);
+    log.error("save failed", { error: err });
     return { ok: false, message: "Could not save the post. Check the server log." };
   }
 }
@@ -143,6 +144,8 @@ function revalidatePublic(categorySlug: string, slug: string) {
 // ---------- actions ----------
 
 /** useActionState-compatible: create when the form has no `id`, otherwise update. */
+const log = logger("admin:posts");
+
 export async function savePost(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const postId = fdOptional(formData, "id");
   const result = await persistPost(postId, formData);
@@ -215,7 +218,7 @@ export async function transitionPost(rawPostId: string, to: PostStatus, formData
   try {
     await db.post.update({ where: { id: postId }, data });
   } catch (err) {
-    console.error("[posts] transition failed", err);
+    log.error("transition failed", { error: err });
     return failResult("Could not change the status. Check the server log.");
   }
 
@@ -227,7 +230,7 @@ export async function transitionPost(rawPostId: string, to: PostStatus, formData
       const ping = await pingIndexNow([publicPath]);
       if (ping.attempted && !ping.ok) indexingNote = ` ${ping.detail}`;
     } catch (err) {
-      console.error("[posts] IndexNow ping failed", err);
+      log.error("IndexNow ping failed", { error: err });
     }
     revalidatePublic(post.category.slug, post.slug);
   } else if (post.status === "PUBLISHED") {
@@ -255,7 +258,7 @@ export async function deletePost(rawPostId: string): Promise<void> {
     await db.post.delete({ where: { id: postId } });
     deleted = true;
   } catch (err) {
-    console.error("[posts] delete failed", err);
+    log.error("delete failed", { error: err });
   }
   if (!deleted) redirect(`/admin/posts/${postId}?deleteFailed=1`);
 

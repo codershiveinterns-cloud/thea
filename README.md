@@ -110,10 +110,14 @@ One run = CLAUDE.md steps 1–9:
 
 Entry points: `npm run generate`, `npm run scheduler`, the dashboard's "Run pipeline now", and `POST /api/cron/generate` (Bearer `CRON_SECRET`; open on localhost when the secret is unset). The last run's report is shown on the dashboard. The editor's "Regenerate section" button rewrites one H2 from the post's stored source URLs.
 
+## Operations
+
+See [LAUNCH.md](./LAUNCH.md) for the go-live checklist, cron setup, how to add an author, how to review a post, and what to do when a feed source changes. Errors render through `error.tsx` boundaries (site and admin); logs are JSON lines in production (`LOG_LEVEL`); the dashboard keeps the last 20 pipeline runs with their errors.
+
 ## Build order
 
 1. ✅ Scaffold + Prisma (SQLite) + seed + `/admin`
 2. ✅ Public site + SEO + OG images + Lighthouse ≥ 95
 3. ✅ Pipeline + `npm run generate` + scheduler + quality gate + tests
-4. Polish, logging, sanitisation
+4. ✅ Polish: error boundaries, structured logging, sanitisation, security headers, run history, LAUNCH.md
 5. Go-live (Vercel, Postgres, IndexNow, cron)

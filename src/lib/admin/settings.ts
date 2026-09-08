@@ -3,6 +3,7 @@
  * Mutations for the Setting table. Reads live in src/lib/settings.ts.
  * Called from the /admin/settings form via React 19 useActionState.
  */
+import { logger } from "@/lib/log";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { AD_PLACEMENTS, adSlotSettingKey, type SettingKey } from "@/lib/constants";
@@ -42,6 +43,8 @@ function toStoredValues(input: SettingsInput): Array<{ key: SettingKey; value: s
  * Save every setting at once. Form field names match SETTING_KEYS
  * (checkboxes are read with fdBool, so an unchecked box is stored as "false").
  */
+const log = logger("admin:settings");
+
 export async function saveSettings(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = settingsInputSchema.safeParse(readSettingsForm(formData));
   if (!parsed.success) {
@@ -60,7 +63,7 @@ export async function saveSettings(_prevState: ActionResult, formData: FormData)
       ),
     );
   } catch (err) {
-    console.error("[settings] save failed", err);
+    log.error("save failed", { error: err });
     return failResult("Saving failed. Nothing was changed — check the server log.");
   }
 

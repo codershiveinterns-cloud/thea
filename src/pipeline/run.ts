@@ -268,11 +268,43 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
   if (!dryRun) {
     try {
       await db.setting.upsert({ where: { key: SETTING_KEYS.PIPELINE_LAST_RUN }, update: { value: JSON.stringify(report) }, create: { key: SETTING_KEYS.PIPELINE_LAST_RUN, value: JSON.stringify(report) } });
+      await appendRunHistory(report);
     } catch (err) {
       log.warn("run", `could not save run report: ${(err as Error).message}`);
     }
   }
   return report;
+}
+
+/** Compact per-run record kept for the admin "Recent pipeline runs" list. */
+export type RunHistoryEntry = { startedAt: string; finishedAt: string; ok: boolean; summary: string; errors: string[]; created: number };
+export const RUN_HISTORY_MAX = 20;
+
+export function pushRunHistory(history: RunHistoryEntry[], entry: RunHistoryEntry, max = RUN_HISTORY_MAX): RunHistoryEntry[] {
+  return [entry, ...history].slice(0, max);
+}
+
+export function parseRunHistory(raw: string): RunHistoryEntry[] {
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? (v as RunHistoryEntry[]).filter((e) => e && typeof e.finishedAt === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+async function appendRunHistory(report: PipelineReport) {
+  const existing = await db.setting.findUnique({ where: { key: SETTING_KEYS.PIPELINE_RUN_HISTORY } });
+  const entry: RunHistoryEntry = {
+    startedAt: report.startedAt,
+    finishedAt: report.finishedAt,
+    ok: report.ok,
+    summary: summarizeReport(report),
+    errors: report.log.filter((e) => e.level === "error").map((e) => `[${e.step}] ${e.message}`).slice(0, 5),
+    created: report.posts.filter((p) => p.postId).length,
+  };
+  const value = JSON.stringify(pushRunHistory(parseRunHistory(existing?.value ?? ""), entry));
+  await db.setting.upsert({ where: { key: SETTING_KEYS.PIPELINE_RUN_HISTORY }, update: { value }, create: { key: SETTING_KEYS.PIPELINE_RUN_HISTORY, value } });
 }
 
 export function summarizeReport(r: PipelineReport): string {
