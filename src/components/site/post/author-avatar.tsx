@@ -33,7 +33,7 @@ export function AuthorAvatar({
   className?: string;
 }) {
   const s = SIZES[size];
-  const base = `${s.box} shrink-0 rounded-full border border-zinc-200 bg-zinc-100 ${className}`;
+  const base = `${s.box} shrink-0 rounded-full border border-line bg-bg-3 ${className}`;
   if (avatar) {
     return (
       <Image
@@ -48,7 +48,7 @@ export function AuthorAvatar({
     );
   }
   return (
-    <span aria-hidden="true" className={`${base} inline-flex items-center justify-center font-semibold text-zinc-700 ${s.text}`}>
+    <span aria-hidden="true" className={`${base} inline-flex items-center justify-center font-semibold text-fg-body ${s.text}`}>
       {authorInitials(name)}
     </span>
   );

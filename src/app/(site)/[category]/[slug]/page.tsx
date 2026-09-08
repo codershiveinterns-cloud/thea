@@ -143,29 +143,33 @@ export default async function PostPage({ params }: Props) {
   );
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <JsonLd data={jsonLd} />
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-14">
+        <article className="min-w-0 max-w-[70ch]">
+          <Breadcrumbs items={crumbs} />
+          <h1 className="mt-5 font-display text-3xl font-bold leading-[1.15] tracking-tight text-fg sm:text-4xl lg:text-[2.75rem]">{post.title}</h1>
+          <AffectedBuilds builds={builds} />
+          <PostMeta author={post.author} publishedAt={post.publishedAt} updatedAt={post.updatedAt} readingMinutes={readingTimeMinutes(post.body)} />
 
-      <Breadcrumbs items={crumbs} />
-      <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-zinc-900 md:text-4xl">{post.title}</h1>
-      <PostMeta author={post.author} publishedAt={post.publishedAt} updatedAt={post.updatedAt} readingMinutes={readingTimeMinutes(post.body)} />
-      <AffectedBuilds builds={builds} />
+          <QuickAnswer text={post.quickAnswer} />
+          <AdSlot placement="after-quick-answer" />
+          <Toc headings={headings} variant="inline" />
 
-      <QuickAnswer text={post.quickAnswer} />
-      <AdSlot placement="after-quick-answer" />
-      <Toc headings={headings} />
+          <div className="mt-10">
+            <PostBody body={post.body} />
+          </div>
 
-      <div className="mt-8">
-        <PostBody body={post.body} />
+          <Screenshots images={screenshots} title={post.title} />
+          <AdSlot placement="end-of-article" />
+          <Faq items={faq} />
+
+          <VerificationLine testedOnBuild={post.testedOnBuild} lastVerifiedAt={post.lastVerifiedAt} authorName={post.author.name} />
+          <AuthorCard author={post.author} />
+        </article>
+        <Toc headings={headings} variant="aside" />
       </div>
-
-      <Screenshots images={screenshots} title={post.title} />
-      <AdSlot placement="end-of-article" />
-      <Faq items={faq} />
-
-      <VerificationLine testedOnBuild={post.testedOnBuild} lastVerifiedAt={post.lastVerifiedAt} authorName={post.author.name} />
-      <AuthorCard author={post.author} />
       <RelatedPosts posts={related} />
-    </article>
+    </div>
   );
 }

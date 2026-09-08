@@ -47,7 +47,7 @@ function CategoryLinks() {
         <li key={c.slug}>
           <Link
             href={categoryPath(c.slug)}
-            className="inline-flex min-h-11 items-center rounded-full border border-zinc-300 px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-sm font-medium text-fg-body hover:bg-bg-2"
           >
             {c.name}
           </Link>
@@ -66,8 +66,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Search {SITE.name}</h1>
-      <p className="mt-2 leading-7 text-zinc-600">Searches the title and quick answer of every published article.</p>
+      <h1 className="font-display text-3xl font-bold leading-tight tracking-tight md:text-4xl">Search {SITE.name}</h1>
+      <p className="mt-2 leading-7 text-fg-body">Searches the title and quick answer of every published article.</p>
       <SearchForm defaultValue={q} className="mt-6" />
       {tooLong ? (
         <p className="mt-3 text-sm text-amber-800">Search terms are limited to {QUERY_MAX} characters — try a shorter phrase, such as just the error code.</p>
@@ -80,13 +80,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         {searched && results.length > 0 ? (
           <>
             {/* break-words: an unbroken query (a long error string) must wrap rather than overflow the viewport on mobile. */}
-            <h2 id="results-heading" className="break-words text-2xl font-semibold tracking-tight">
+            <h2 id="results-heading" className="font-display break-words text-2xl font-semibold tracking-tight">
               {results.length} {results.length === 1 ? "result" : "results"} for “{term}”
             </h2>
             {results.length === RESULTS_MAX ? (
-              <p className="mt-1 text-sm text-zinc-600">Showing the {RESULTS_MAX} most recent matches — add a word to narrow it down.</p>
+              <p className="mt-1 text-sm text-fg-body">Showing the {RESULTS_MAX} most recent matches — add a word to narrow it down.</p>
             ) : null}
-            <ul className="mt-4 divide-y divide-zinc-200 rounded-xl border border-zinc-200 px-4">
+            <ul className="mt-4 divide-y divide-line rounded-xl border border-line px-4">
               {results.map((post) => (
                 <li key={post.id}>
                   <PostCard post={post} variant="compact" />
@@ -96,20 +96,20 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           </>
         ) : searched ? (
           <>
-            <h2 id="results-heading" className="break-words text-2xl font-semibold tracking-tight">
+            <h2 id="results-heading" className="font-display break-words text-2xl font-semibold tracking-tight">
               No results for “{term}”
             </h2>
-            <p className="mt-2 leading-7 text-zinc-600">
+            <p className="mt-2 leading-7 text-fg-body">
               Try a shorter phrase — the error code on its own, or the KB number of the update — or browse a category:
             </p>
             <CategoryLinks />
           </>
         ) : (
           <>
-            <h2 id="results-heading" className="text-2xl font-semibold tracking-tight">
+            <h2 id="results-heading" className="font-display text-2xl font-semibold tracking-tight">
               Browse by category
             </h2>
-            <p className="mt-2 leading-7 text-zinc-600">Not sure what to search for? Every article is filed under one of these.</p>
+            <p className="mt-2 leading-7 text-fg-body">Not sure what to search for? Every article is filed under one of these.</p>
             <CategoryLinks />
           </>
         )}

@@ -12,20 +12,20 @@ export const metadata: Metadata = { title: "Page not found", robots: NOINDEX_ROB
 export default function NotFound() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 md:py-16">
-      <p className="text-xs font-medium uppercase tracking-wide text-blue-700">404</p>
-      <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight md:text-4xl">Page not found</h1>
-      <p className="mt-4 leading-7 text-zinc-600">
+      <p className="text-xs font-medium uppercase tracking-wide text-accent">404</p>
+      <h1 className="font-display mt-2 text-3xl font-bold leading-tight tracking-tight md:text-4xl">Page not found</h1>
+      <p className="mt-4 leading-7 text-fg-body">
         That page doesn’t exist or has moved — try searching for the error code or update you’re looking for.
       </p>
       <SearchForm className="mt-6" />
 
-      <h2 className="mt-12 text-2xl font-semibold tracking-tight">Browse by category</h2>
+      <h2 className="font-display mt-12 text-2xl font-semibold tracking-tight">Browse by category</h2>
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {CATEGORIES.map((c) => (
           <li key={c.slug}>
-            <Link href={categoryPath(c.slug)} className="block h-full rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50">
-              <span className="block font-semibold text-zinc-900">{c.name}</span>
-              <span className="mt-1 block text-sm leading-6 text-zinc-600">{c.description}</span>
+            <Link href={categoryPath(c.slug)} className="block h-full rounded-xl border border-line p-4 hover:bg-bg-2">
+              <span className="block font-semibold text-fg">{c.name}</span>
+              <span className="mt-1 block text-sm leading-6 text-fg-body">{c.description}</span>
             </Link>
           </li>
         ))}

@@ -52,11 +52,11 @@ export function CategoryListing({ category, page, items, total }: Props) {
       <Breadcrumbs items={crumbs} />
 
       <header className="mt-4 max-w-3xl">
-        <p className="text-xs font-medium uppercase tracking-wide text-blue-700">Category</p>
-        <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight md:text-4xl">{category.name}</h1>
-        <p className="mt-3 text-lg leading-7 text-zinc-600">{category.description}</p>
-        <p className="mt-3 text-sm text-zinc-500">
-          <span className="font-medium tabular-nums text-zinc-700">{countLabel(total)}</span>
+        <p className="text-xs font-medium uppercase tracking-wide text-accent">Category</p>
+        <h1 className="font-display mt-1 text-3xl font-bold leading-tight tracking-tight md:text-4xl">{category.name}</h1>
+        <p className="mt-3 text-lg leading-7 text-fg-body">{category.description}</p>
+        <p className="mt-3 text-sm text-fg-muted">
+          <span className="font-medium tabular-nums text-fg-body">{countLabel(total)}</span>
           {page > 1 ? <span className="tabular-nums"> · Page {page} of {totalPages}</span> : null}
         </p>
       </header>
@@ -69,7 +69,7 @@ export function CategoryListing({ category, page, items, total }: Props) {
         </EmptyState>
       ) : (
         <section aria-labelledby="listing-heading" className="mt-12">
-          <h2 id="listing-heading" className="text-2xl font-semibold tracking-tight">
+          <h2 id="listing-heading" className="font-display text-2xl font-semibold tracking-tight">
             {page > 1 ? `Older guides, page ${page}` : "Latest guides"}
           </h2>
           <PostGrid posts={items} firstPriority={page === 1} className="mt-6" />

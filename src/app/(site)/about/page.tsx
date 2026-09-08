@@ -18,16 +18,16 @@ export const metadata: Metadata = buildMetadata({
 
 function AuthorCard({ author }: { author: { slug: string; name: string; avatar: string | null; bio: string } }) {
   return (
-    <article className="flex gap-4 rounded-xl border border-zinc-200 p-4">
+    <article className="flex gap-4 rounded-xl border border-line p-4">
       {/* Shared avatar: sized, lazy, initials fallback, and external https avatars served unoptimized (no remotePatterns configured). */}
       <AuthorAvatar name={author.name} avatar={author.avatar} size={64} />
       <div className="min-w-0">
-        <h3 className="text-base font-semibold leading-snug text-zinc-900">
+        <h3 className="text-base font-semibold leading-snug text-fg">
           <Link href={authorPath(author.slug)} className="hover:underline">
             {author.name}
           </Link>
         </h3>
-        <p className="mt-1 break-words text-sm leading-6 text-zinc-600">{author.bio}</p>
+        <p className="mt-1 break-words text-sm leading-6 text-fg-body">{author.bio}</p>
       </div>
     </article>
   );

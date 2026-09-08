@@ -9,8 +9,8 @@ export async function AdSlot({ placement, className = "" }: { placement: AdPlace
   const html = (await getSetting(adSlotSettingKey(placement))).trim();
   if (!html) return null;
   return (
-    <aside aria-label="Advertisement" data-placement={placement} className={`my-8 ${className}`}>
-      <p className="mb-1 text-[11px] uppercase tracking-wide text-zinc-500">Advertisement</p>
+    <aside aria-label="Advertisement" data-placement={placement} className={`my-10 rounded-xl border border-dashed border-line p-3 ${className}`}>
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-fg-muted">Advertisement</p>
       <div className="min-h-[90px]" dangerouslySetInnerHTML={{ __html: html }} />
     </aside>
   );

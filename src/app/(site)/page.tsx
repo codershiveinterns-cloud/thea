@@ -29,7 +29,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={jsonLdGraph(organizationJsonLd(), websiteJsonLd())} />
-      <div className="mx-auto max-w-6xl px-4">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <HomeHero posts={latest} />
         {hasPosts ? (
           <>

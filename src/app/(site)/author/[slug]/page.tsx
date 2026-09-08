@@ -68,7 +68,7 @@ function initials(name: string): string {
 }
 
 const chipClass =
-  "inline-flex min-h-11 items-center rounded-full bg-zinc-100 px-3.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 hover:text-zinc-900";
+  "inline-flex min-h-11 items-center rounded-full bg-bg-3 px-3.5 text-sm font-medium text-fg-body hover:bg-line hover:text-fg";
 
 export default async function AuthorPage({ params }: { params: Promise<Params> }) {
   const author = await resolveAuthor(params);
@@ -100,27 +100,27 @@ export default async function AuthorPage({ params }: { params: Promise<Params> }
             width={96}
             height={96}
             loading="eager"
-            className="h-24 w-24 shrink-0 rounded-full bg-zinc-100 object-cover"
+            className="h-24 w-24 shrink-0 rounded-full bg-bg-3 object-cover"
             // External avatar hosts are not in next.config images.remotePatterns; serve them as-is.
             unoptimized={/^https?:\/\//.test(author.avatar)}
           />
         ) : (
           <div
             aria-hidden="true"
-            className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-2xl font-semibold text-zinc-700"
+            className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-bg-3 text-2xl font-semibold text-fg-body"
           >
             {initials(author.name)}
           </div>
         )}
 
         <div className="min-w-0 max-w-3xl">
-          <p className="text-xs font-medium uppercase tracking-wide text-blue-700">Author</p>
-          <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight md:text-4xl">{author.name}</h1>
-          <p className="mt-3 text-[17px] leading-7 text-zinc-600">{author.bio}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-accent">Author</p>
+          <h1 className="font-display mt-1 text-3xl font-bold leading-tight tracking-tight md:text-4xl">{author.name}</h1>
+          <p className="mt-3 text-[17px] leading-7 text-fg-body">{author.bio}</p>
 
           {covers.length > 0 ? (
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-zinc-500">Covers:</span>
+              <span className="text-sm text-fg-muted">Covers:</span>
               <ul role="list" className="flex flex-wrap gap-2">
                 {covers.map((c) => (
                   <li key={c.slug}>
@@ -133,8 +133,8 @@ export default async function AuthorPage({ params }: { params: Promise<Params> }
             </div>
           ) : null}
 
-          <p className="mt-3 text-sm text-zinc-500">
-            <span className="font-medium tabular-nums text-zinc-700">{countLabel(total, "published guide")}</span>
+          <p className="mt-3 text-sm text-fg-muted">
+            <span className="font-medium tabular-nums text-fg-body">{countLabel(total, "published guide")}</span>
           </p>
         </div>
       </header>
@@ -147,13 +147,13 @@ export default async function AuthorPage({ params }: { params: Promise<Params> }
         </EmptyState>
       ) : (
         <section aria-labelledby="author-posts-heading" className="mt-12">
-          <h2 id="author-posts-heading" className="text-2xl font-semibold tracking-tight">
+          <h2 id="author-posts-heading" className="font-display text-2xl font-semibold tracking-tight">
             Guides by {author.name}
           </h2>
           {/* The eager avatar above is this page's one preloaded image; the grid stays lazy. */}
           <PostGrid posts={posts} className="mt-6" />
           {total > posts.length ? (
-            <p className="mt-6 text-sm text-zinc-500">
+            <p className="mt-6 text-sm text-fg-muted">
               Showing the {posts.length.toLocaleString("en-US")} most recent guides. Older ones are listed in their
               category pages.
             </p>

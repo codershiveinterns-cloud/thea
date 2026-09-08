@@ -7,19 +7,19 @@ import { POST_IDS } from "./ids";
 export function AuthorCard({ author }: { author: { name: string; slug: string; avatar: string | null; bio: string } }) {
   const href = authorPath(author.slug);
   return (
-    <section aria-labelledby={POST_IDS.author} className="mt-12 flex gap-4 rounded-xl border border-zinc-200 bg-zinc-50 p-5">
+    <section aria-labelledby={POST_IDS.author} className="mt-12 flex flex-col gap-5 rounded-2xl border border-line bg-bg-2 p-6 sm:flex-row">
       <AuthorAvatar name={author.name} avatar={author.avatar} size={64} />
       <div className="min-w-0 flex-1">
-        <p id={POST_IDS.author} className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        <p id={POST_IDS.author} className="font-display text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
           Written by
         </p>
-        <p className="mt-0.5 text-lg font-semibold text-zinc-900">
-          <Link href={href} className="hover:underline">
+        <p className="mt-1 font-display text-xl font-bold text-fg">
+          <Link href={href} className="hover:text-accent">
             {author.name}
           </Link>
         </p>
-        <p className="mt-2 break-words text-sm leading-6 text-zinc-600">{author.bio}</p>
-        <Link href={href} className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-blue-700 hover:underline">
+        <p className="mt-2 break-words text-sm leading-6 text-fg-body">{author.bio}</p>
+        <Link href={href} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-accent hover:underline">
           More from {author.name} <span aria-hidden="true">&nbsp;→</span>
         </Link>
       </div>

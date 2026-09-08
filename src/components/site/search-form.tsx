@@ -30,11 +30,11 @@ export function SearchForm({
         maxLength={100}
         autoComplete="off"
         spellCheck={false}
-        className="h-11 min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-3 text-base text-zinc-900 placeholder:text-zinc-500 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/30"
+        className="h-11 min-w-0 flex-1 rounded-md border border-line bg-bg px-3 text-base text-fg placeholder:text-fg-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
       />
       <button
         type="submit"
-        className="h-11 shrink-0 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        className="h-11 shrink-0 rounded-md bg-accent px-4 text-sm font-semibold text-accent-fg hover:bg-accent-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         Search
       </button>

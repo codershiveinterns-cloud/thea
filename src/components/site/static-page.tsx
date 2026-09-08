@@ -14,14 +14,14 @@ import { JsonLd } from "./json-ld";
  * deliberately don't reach inside it, so nothing has to fight specificity.
  */
 const PROSE = [
-  "text-[17px] leading-7 text-zinc-800",
-  "[&>h2]:mt-10 [&>h2]:text-2xl [&>h2]:font-semibold [&>h2]:tracking-tight [&>h2]:text-zinc-900 [&>h2:first-child]:mt-0",
-  "[&>h3]:mt-6 [&>h3]:text-lg [&>h3]:font-semibold [&>h3]:text-zinc-900",
+  "text-[17px] leading-7 text-fg",
+  "[&>h2]:mt-10 [&>h2]:text-2xl [&>h2]:font-semibold [&>h2]:tracking-tight [&>h2]:text-fg [&>h2:first-child]:mt-0",
+  "[&>h3]:mt-6 [&>h3]:text-lg [&>h3]:font-semibold [&>h3]:text-fg",
   "[&>p]:my-4",
   "[&>ul]:my-4 [&>ul]:list-disc [&>ul]:space-y-2 [&>ul]:pl-6",
   "[&>ol]:my-4 [&>ol]:list-decimal [&>ol]:space-y-2 [&>ol]:pl-6",
-  "[&_strong]:font-semibold [&_strong]:text-zinc-900",
-  "[&_a:not([class])]:font-medium [&_a:not([class])]:text-blue-700 [&_a:not([class])]:underline [&_a:not([class])]:decoration-blue-300 [&_a:not([class])]:underline-offset-2 [&_a:not([class])]:hover:decoration-blue-700",
+  "[&_strong]:font-semibold [&_strong]:text-fg",
+  "[&_a:not([class])]:font-medium [&_a:not([class])]:text-accent [&_a:not([class])]:underline [&_a:not([class])]:decoration-accent/40 [&_a:not([class])]:underline-offset-2 [&_a:not([class])]:hover:decoration-accent",
 ].join(" ");
 
 export function StaticPage({
@@ -40,8 +40,8 @@ export function StaticPage({
     <div className="mx-auto max-w-3xl px-4 py-10">
       <JsonLd data={jsonLdGraph(breadcrumbJsonLd(breadcrumbs))} />
       <Breadcrumbs items={breadcrumbs} />
-      <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight md:text-4xl">{title}</h1>
-      {intro ? <p className="mt-4 text-lg leading-8 text-zinc-600">{intro}</p> : null}
+      <h1 className="font-display mt-4 text-3xl font-bold leading-tight tracking-tight md:text-4xl">{title}</h1>
+      {intro ? <p className="mt-4 text-lg leading-8 text-fg-body">{intro}</p> : null}
       <div className={`mt-8 ${PROSE}`}>{children}</div>
     </div>
   );

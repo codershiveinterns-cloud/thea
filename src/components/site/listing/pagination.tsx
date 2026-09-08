@@ -10,7 +10,7 @@ type Props = {
 };
 
 const linkClass =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900";
+  "inline-flex min-h-11 items-center gap-1.5 rounded-md border border-line bg-bg px-4 text-sm font-medium text-fg-body hover:bg-bg-2 hover:text-fg";
 
 /**
  * Newer / Older links for a chronological listing. "Newer" points to the previous
@@ -32,7 +32,7 @@ export function Pagination({ basePath, page, totalPages, className = "" }: Props
           </Link>
         ) : null}
       </div>
-      <p className="justify-self-center text-sm tabular-nums text-zinc-500">
+      <p className="justify-self-center text-sm tabular-nums text-fg-muted">
         Page {page} of {totalPages}
       </p>
       <div className="justify-self-end">

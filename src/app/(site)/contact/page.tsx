@@ -27,9 +27,9 @@ export default function ContactPage() {
       ]}
     >
       <h2>Editorial inbox</h2>
-      <div className="my-6 rounded-xl border border-zinc-200 bg-zinc-50 p-5">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Email the editors</p>
-        <a href={`mailto:${EMAIL}`} className="mt-1 inline-block break-all text-lg font-semibold text-blue-700 hover:underline">
+      <div className="my-6 rounded-xl border border-line bg-bg-2 p-5">
+        <p className="text-xs font-medium uppercase tracking-wide text-fg-muted">Email the editors</p>
+        <a href={`mailto:${EMAIL}`} className="mt-1 inline-block break-all text-lg font-semibold text-accent hover:underline">
           {EMAIL}
         </a>
       </div>
