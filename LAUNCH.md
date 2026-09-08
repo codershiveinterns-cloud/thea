@@ -11,6 +11,7 @@
 | `AI_PROVIDER` | Vercel + local | `anthropic` or `gemini`. |
 | `AI_MODEL` | optional | Model id for the provider (defaults `claude-opus-5` / `gemini-3.6-flash`). |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | Vercel + local | Never committed, never logged (every error message is scrubbed). |
+| `ADMIN_USER` / `ADMIN_PASSWORD` | Vercel | HTTP Basic Auth for `/admin` and `/api/admin`. Required in production (503 without them); optional locally. |
 | `CRON_SECRET` | Vercel + local | Required everywhere: `/api/cron/generate` returns 503 when unset and 401 without `Authorization: Bearer <CRON_SECRET>`. |
 | `LOG_LEVEL` | optional | `debug` \| `info` \| `warn` \| `error` (default `info` in production). Logs are one JSON line per event. |
 | `SCHEDULER_CRON` | local only | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
@@ -58,7 +59,7 @@ Ingest is tolerant: a feed that fails or returns no items is logged as a warning
 
 - Every run is recorded: the last report on the dashboard, the last 20 summaries under "Recent pipeline runs" (with errors), and full logs on stdout as JSON lines.
 - `npm run generate -- --dry-run --limit 1` generates without writing anything — use it after changing prompts or feeds.
-- Security: `/admin` has no auth yet (deferred by CLAUDE.md) — put it behind Vercel password protection or a proxy until auth lands. Server actions are same-origin only (Next.js checks the `Origin` header). Markdown never renders raw HTML and unsafe URL schemes are dropped. Ad slot HTML is injected verbatim — paste only your own ad code. Security headers (`nosniff`, `SAMEORIGIN`, referrer policy, permissions policy) are set in `next.config.ts`.
+- Security: `/admin` and `/api/admin` require HTTP Basic Auth (`ADMIN_USER` / `ADMIN_PASSWORD`, constant-time compare, 401 with `WWW-Authenticate`). `/api/cron/generate` uses the `CRON_SECRET` bearer token instead. Server actions are same-origin only (Next.js checks the `Origin` header). Markdown never renders raw HTML and unsafe URL schemes are dropped. Ad slot HTML is injected verbatim — paste only your own ad code. Security headers (`nosniff`, `SAMEORIGIN`, referrer policy, permissions policy) are set in `next.config.ts`.
 
 ## Re-verification
 
@@ -66,7 +67,6 @@ Published guides whose last verification is older than 90 days appear on the das
 
 ## Not implemented yet (from CLAUDE.md)
 
-- Auth for `/admin` (deferred).
 - Supabase Storage adapter (`src/lib/storage.ts` is local disk; the interface is ready).
 - IndexNow key file at `/{key}.txt` (serve from `public/` at go-live) — the ping itself is wired.
 - macOS / iOS / Android categories and email subscribe (deferred).

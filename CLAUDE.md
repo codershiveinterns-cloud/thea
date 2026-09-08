@@ -7,10 +7,10 @@ Windows builds. Goal: organic traffic from Google Search + Google Discover.
 Monetised later via self-managed display ad slots (no affiliate networks, no buy buttons).
 
 ## Current stage: LOCAL ONLY
-- Everything runs on localhost. No hosting, no cloud DB, no auth yet.
-- /admin is open (no login) for now. Design it so auth can be added later
-  without restructuring (keep all admin routes under /admin and all admin
-  server actions in src/lib/admin/).
+- Everything can run on localhost; production is Supabase Postgres + Vercel (see Go-live).
+- /admin and /api/admin are behind HTTP Basic Auth (src/middleware.ts): ADMIN_USER +
+  ADMIN_PASSWORD from env. Unset in development = open on localhost; unset elsewhere = 503.
+  Keep all admin routes under /admin and all admin server actions in src/lib/admin/.
 - Screenshots and featured images are saved to /public/uploads/ for now.
   Abstract file storage behind src/lib/storage.ts so it can be swapped for
   Supabase Storage later.
@@ -117,7 +117,7 @@ Posts are assigned round-robin among authors whose categoryFocus matches.
 / (home), /[category], /[category]/[slug], /author/[slug], /about, /contact,
 /editorial-policy, /search, /feed.xml, /sitemap.xml, /robots.txt
 
-## Admin pages (/admin, no auth for now)
+## Admin pages (/admin, HTTP Basic Auth)
 Dashboard (counts by status, review queue) · Posts list with filters · Post editor
 (markdown + live preview, all structured fields, screenshot upload, related-posts picker,
 status buttons, "Regenerate section" per H2) · Authors CRUD · Keywords queue ·
@@ -139,4 +139,4 @@ Settings (ad slot HTML per placement, posts-per-run) · "Run pipeline now" butto
 5. Go-live (see section above) — only when asked
 
 ## Deferred (do not build until asked)
-Auth for /admin · Supabase Storage · macOS/iOS/Android categories · email subscribe
+Supabase Storage · macOS/iOS/Android categories · email subscribe

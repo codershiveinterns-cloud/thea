@@ -2,7 +2,7 @@
 
 SEO-first blog covering Windows updates (what changed, what broke, how to fix it) and error-code fixes for the newest Windows builds. See [CLAUDE.md](./CLAUDE.md) for the product spec, content rules and build order.
 
-**Stage: go-live.** Postgres on Supabase, deployed on Vercel at https://thea.global. `/admin` still has no auth — protect it (Vercel password protection or a proxy) until auth lands.
+**Stage: go-live.** Postgres on Supabase, deployed on Vercel at https://thea.global. `/admin` and `/api/admin` are behind HTTP Basic Auth (`ADMIN_USER` / `ADMIN_PASSWORD`).
 
 ## Stack
 
@@ -47,7 +47,8 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `AI_MODEL` | no | Model id for that provider (defaults `claude-opus-5` / `gemini-3.6-flash`). |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | for generation | Never commit or log them; `src/lib/ai.ts` redacts them from every error. Without a key, ingest still runs and generation stops with a clear error. |
 | `SCHEDULER_CRON` | no | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
-| `CRON_SECRET` | yes | `/api/cron/generate` refuses every call without it. |
+| `ADMIN_USER` / `ADMIN_PASSWORD` | production | HTTP Basic Auth for `/admin` and `/api/admin` (`src/middleware.ts`). Unset in development leaves the admin open on localhost; unset in production returns 503. |
+| `CRON_SECRET` | yes | `/api/cron/generate` refuses every call without it (bearer token, not Basic Auth). |
 | `INDEXNOW_KEY` | go-live | Same value as the `public/<key>.txt` filename. |
 
 Runtime settings that an editor changes (posts per day, auto-publish, ad slot HTML, IndexNow key, GA4 id, Search Console tag) live in the `Setting` table and are edited at `/admin/settings`, not in env.
