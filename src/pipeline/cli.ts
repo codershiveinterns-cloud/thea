@@ -5,9 +5,11 @@
  *   --keyword "…"    queue (if needed) and generate this exact phrase in --category <slug>
  *   --skip-ingest    don't fetch feeds first
  *   --ingest-only    fetch feeds and queue keywords, generate nothing
+ *   --list-refresh   list published posts due for re-verification (older than 90 days) and exit
  */
 import { db } from "@/lib/db";
 import { runPipeline, summarizeReport, isCategorySlug } from "./run";
+import { listDueForReverification } from "./reverify";
 
 process.loadEnvFile?.(".env");
 
@@ -18,6 +20,12 @@ function arg(name: string): string | undefined {
 const has = (name: string) => process.argv.includes(name);
 
 async function main() {
+  if (has("--list-refresh")) {
+    const due = await listDueForReverification(100);
+    console.log(`${due.length} published guide(s) due for re-verification:`);
+    for (const p of due) console.log(`  - ${p.title} (last verified ${(p.lastVerifiedAt ?? p.publishedAt)?.toISOString().slice(0, 10)}) → /admin/posts/${p.id}`);
+    return;
+  }
   let keywordId: string | undefined;
   const phrase = arg("--keyword");
   if (phrase) {

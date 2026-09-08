@@ -88,6 +88,29 @@ export function SettingsForm({ initial }: { initial: Values }) {
             />
           </Field>
 
+          <Field
+            label="Minimum quality score to auto-publish"
+            htmlFor={`${id}-minscore`}
+            hint="0–100"
+            error={errors.MIN_QUALITY_SCORE}
+            help="Only used when auto-publish is on. 0 (default) publishes every post that passes the identifier check; raise it to hold low-scoring posts for review."
+            className="max-w-xs"
+          >
+            <Input
+              id={`${id}-minscore`}
+              name="MIN_QUALITY_SCORE"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={100}
+              step={1}
+              required
+              value={values.MIN_QUALITY_SCORE}
+              onChange={(e) => set("MIN_QUALITY_SCORE", e.target.value)}
+              aria-invalid={errors.MIN_QUALITY_SCORE ? true : undefined}
+            />
+          </Field>
+
           <CheckboxRow
             id={`${id}-auto`}
             name="AUTO_PUBLISH"
@@ -98,9 +121,9 @@ export function SettingsForm({ initial }: { initial: Values }) {
             description={
               <>
                 Off (default): every generated post lands in <strong>Review</strong> and nothing goes live until a human
-                clicks Publish. On: a post is published immediately only when its quality score is{" "}
-                <strong>85 or higher</strong> and the quality gate found <strong>no hallucinated identifiers</strong>{" "}
-                (KB numbers, build numbers, error codes); anything below 85 or flagged still goes to Review. Auto-published
+                clicks Publish. On: a post is published immediately unless the quality gate found{" "}
+                <strong>an identifier not supported by the sources</strong> (KB numbers, build numbers, error codes) or its
+                score is below the minimum above; those still go to Review. Auto-published
                 posts show &ldquo;Verified: pending&rdquo; and appear in the &ldquo;Published today — verify&rdquo; queue
                 until an editor adds screenshots and a tested-on build.
               </>

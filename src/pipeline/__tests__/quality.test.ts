@@ -8,10 +8,13 @@ describe("decidePublish (CLAUDE.md step 9)", () => {
   it("never publishes when AUTO_PUBLISH is off", () => {
     expect(decidePublish({ autoPublish: false, score: 100, flaggedIdentifiers: [] })).toBe("REVIEW");
   });
-  it("publishes only at 85+ with no flagged identifiers", () => {
-    expect(decidePublish({ autoPublish: true, score: 85, flaggedIdentifiers: [] })).toBe("PUBLISHED");
-    expect(decidePublish({ autoPublish: true, score: 84, flaggedIdentifiers: [] })).toBe("REVIEW");
+  it("publishes everything that passes the identifier check when no score floor is set", () => {
+    expect(decidePublish({ autoPublish: true, score: 12, flaggedIdentifiers: [] })).toBe("PUBLISHED");
     expect(decidePublish({ autoPublish: true, score: 99, flaggedIdentifiers: ["KB1234567"] })).toBe("REVIEW");
+  });
+  it("honours MIN_QUALITY_SCORE when set", () => {
+    expect(decidePublish({ autoPublish: true, score: 85, flaggedIdentifiers: [], minScore: 85 })).toBe("PUBLISHED");
+    expect(decidePublish({ autoPublish: true, score: 84, flaggedIdentifiers: [], minScore: 85 })).toBe("REVIEW");
   });
 });
 

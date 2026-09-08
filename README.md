@@ -32,7 +32,7 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `npm run db:seed` | Idempotent seed (`prisma/seed.ts`) |
 | `npm run db:reset` | Drop, recreate and reseed the local DB |
 | `npm run db:studio` | Prisma Studio |
-| `npm run generate` | Run the content pipeline once. Flags: `-- --dry-run`, `-- --limit 1`, `-- --skip-ingest`, `-- --keyword "phrase" --category error-codes` |
+| `npm run generate` | Run the content pipeline once. Flags: `-- --dry-run`, `-- --limit 1`, `-- --skip-ingest`, `-- --keyword "phrase" --category error-codes`, `-- --list-refresh` |
 | `npm run scheduler` | Local daily scheduler (node-cron, 09:00 local; `-- --now` runs today's batch immediately) |
 | `npm test` | Vitest: feed parser, identifier extraction, generated-post validator, quality-gate decision, selection |
 
@@ -106,7 +106,7 @@ One run = CLAUDE.md steps 1–9:
 6. **Quality gate** — deterministic identifier check against the sources + a second scoring call (0–100).
 7. **Internal links** — suggestions matched to published posts by category and title similarity.
 8. **Featured image** — the branded `/api/og` card for the title.
-9. **Publish decision** — `AUTO_PUBLISH` off → `REVIEW`. On → `PUBLISHED` only at score ≥ 85 with no unsupported identifiers, then revalidate + IndexNow.
+9. **Publish decision** — `AUTO_PUBLISH` off → `REVIEW`. On → `PUBLISHED` unless an identifier is unsupported by the sources or the score is below Setting `MIN_QUALITY_SCORE` (default 0), then revalidate + IndexNow.
 
 Entry points: `npm run generate`, `npm run scheduler`, the dashboard's "Run pipeline now", and `POST /api/cron/generate` (Bearer `CRON_SECRET`; open on localhost when the secret is unset). The last run's report is shown on the dashboard. The editor's "Regenerate section" button rewrites one H2 from the post's stored source URLs.
 

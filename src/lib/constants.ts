@@ -75,6 +75,7 @@ export function adSlotSettingKey(placement: AdPlacementKey) {
 export const SETTING_KEYS = {
   POSTS_PER_DAY: "POSTS_PER_DAY",
   AUTO_PUBLISH: "AUTO_PUBLISH",
+  MIN_QUALITY_SCORE: "MIN_QUALITY_SCORE",
   SCHEDULER_ENABLED: "SCHEDULER_ENABLED",
   INDEXNOW_KEY: "INDEXNOW_KEY",
   GA_MEASUREMENT_ID: "GA_MEASUREMENT_ID",
@@ -91,6 +92,7 @@ export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 export const SETTING_DEFAULTS: Record<SettingKey, string> = {
   POSTS_PER_DAY: "2",
   AUTO_PUBLISH: "false",
+  MIN_QUALITY_SCORE: "0",
   SCHEDULER_ENABLED: "true",
   INDEXNOW_KEY: "",
   GA_MEASUREMENT_ID: "",
@@ -104,8 +106,10 @@ export const SETTING_DEFAULTS: Record<SettingKey, string> = {
 };
 
 export const POSTS_PER_DAY_MAX = 3;
-/** Quality-gate pass mark (CLAUDE.md): posts scoring below this are flagged "needs work"; auto-publish requires ≥ this. */
+/** Admin "needs work" marker only. The auto-publish threshold is Setting MIN_QUALITY_SCORE (default 0). */
 export const QUALITY_GATE_MIN = 85;
+/** Published posts whose last verification is older than this are listed for re-verification. */
+export const REVERIFY_AFTER_DAYS = 90;
 export const RELATED_POSTS_MIN = 3;
 export const RELATED_POSTS_MAX = 5;
 export const FAQ_MIN = 3;

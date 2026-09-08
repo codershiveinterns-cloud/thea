@@ -9,6 +9,7 @@ import { splitH2Sections } from "@/lib/post-utils";
 import { readStringArray } from "@/lib/validation";
 import { generateSection } from "@/pipeline/generate";
 import { research } from "@/pipeline/research";
+import { refreshPostFromSources } from "@/pipeline/reverify";
 import { runPipeline, summarizeReport } from "@/pipeline/run";
 import { revalidatePath } from "next/cache";
 
@@ -63,5 +64,25 @@ export async function regenerateSection(input: { postId: string; sectionIndex: n
     return { ok: true, message: `Regenerated "${section.heading}" from ${sources.urls.length} source page(s). Review it, then save.`, content };
   } catch (err) {
     return { ok: false, message: `Regeneration failed: ${(err as Error).message}` };
+  }
+}
+
+export type RefreshPostResult = { ok: boolean; message: string };
+
+/**
+ * "Refresh" on the re-verification queue: regenerate the body (and quick answer, FAQ, affected builds)
+ * against freshly fetched sources, store the new quality score, and move the post to REVIEW.
+ */
+export async function refreshPost(postId: string): Promise<RefreshPostResult> {
+  if (!isAiConfigured()) return { ok: false, message: "No AI API key is set in .env, so the post was not refreshed." };
+  try {
+    const r = await refreshPostFromSources(postId);
+    revalidatePath("/admin");
+    revalidatePath(`/admin/posts/${postId}`);
+    revalidatePath("/admin/posts");
+    return { ok: true, message: `Refreshed from ${r.sourceCount} source page(s); quality score ${r.score}. Now in Review.` };
+  } catch (err) {
+    log.error("refresh failed", { error: err, postId });
+    return { ok: false, message: `Refresh failed: ${(err as Error).message}` };
   }
 }

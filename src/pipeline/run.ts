@@ -114,7 +114,7 @@ async function resolveInternalLinks(suggestions: string[], categoryId: string, l
 
 // ---------- steps 3–9 for one keyword ----------
 
-async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; autoPublish: boolean; dryRun: boolean; lastAuthorId: string | null; log: RunLog; usage: PipelineReport["usage"] }): Promise<PostOutcome & { authorId: string | null }> {
+async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; autoPublish: boolean; minScore: number; dryRun: boolean; lastAuthorId: string | null; log: RunLog; usage: PipelineReport["usage"] }): Promise<PostOutcome & { authorId: string | null }> {
   const { log } = ctx;
   const base: PostOutcome & { authorId: string | null } = { keywordId: kw.id, phrase: kw.phrase, categorySlug: kw.categorySlug, status: "FAILED", postId: null, title: null, qualityScore: null, flaggedIdentifiers: [], error: null, authorId: null };
   const category = categoryBySlug(kw.categorySlug);
@@ -162,7 +162,7 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
   log[quality.passes ? "info" : "warn"]("quality", `score ${quality.score}${quality.flaggedIdentifiers.length ? `, unsupported identifiers: ${quality.flaggedIdentifiers.join(", ")}` : ""}`);
 
   // 9. publish decision
-  const status = decidePublish({ autoPublish: ctx.autoPublish, score: quality.score, flaggedIdentifiers: quality.flaggedIdentifiers });
+  const status = decidePublish({ autoPublish: ctx.autoPublish, minScore: ctx.minScore, score: quality.score, flaggedIdentifiers: quality.flaggedIdentifiers });
   if (ctx.dryRun) {
     log.info("publish", `dry run — would create as ${status}`);
     console.log(JSON.stringify({ ...post, qualityScore: quality.score, qualityNotes: quality.notes, status }, null, 2));
@@ -222,13 +222,14 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
   const settings = await getAllSettings();
   const perDay = Math.min(POSTS_PER_DAY_MAX, Math.max(1, opts.limit ?? settingInt(settings.POSTS_PER_DAY, 2)));
   const autoPublish = settingBool(settings.AUTO_PUBLISH);
+  const minScore = Math.max(0, Math.min(100, settingInt(settings.MIN_QUALITY_SCORE, 0)));
   const dryRun = Boolean(opts.dryRun);
   const usage = { inputTokens: 0, outputTokens: 0 };
   const posts: PostOutcome[] = [];
   let ingestReport: PipelineReport["ingest"] = { feeds: [], newKeywords: 0 };
   let items: FeedItem[] = [];
 
-  log.info("run", `AI ${describeAi()} · posts per run ${perDay}, auto-publish ${autoPublish ? "on" : "off"}${dryRun ? ", DRY RUN" : ""}`);
+  log.info("run", `AI ${describeAi()} · posts per run ${perDay}, auto-publish ${autoPublish ? `on (min score ${minScore})` : "off"}${dryRun ? ", DRY RUN" : ""}`);
   try {
     if (!opts.skipIngest) {
       const r = await ingest(feedUrlsFromSetting(settings.FEED_URLS), log, dryRun);
@@ -241,7 +242,7 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
     let lastAuthorId = last?.authorId ?? null;
     for (const kw of selected) {
       try {
-        const outcome = await processKeyword(kw, { items, autoPublish, dryRun, lastAuthorId, log, usage });
+        const outcome = await processKeyword(kw, { items, autoPublish, minScore, dryRun, lastAuthorId, log, usage });
         if (outcome.authorId) lastAuthorId = outcome.authorId;
         if (outcome.error) log.error("post", `"${kw.phrase}": ${outcome.error}`);
         posts.push(outcome);

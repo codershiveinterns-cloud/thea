@@ -35,7 +35,7 @@ Vercel Cron sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_
 4. Submit `/sitemap.xml` in Search Console.
 5. Write the three real author bios in `/admin/authors` (the seed bios are placeholders and say so publicly).
 6. Add feed URLs for the Windows 11 update-history hub and release-health page if Microsoft moves them (defaults are in `src/pipeline/sources/feeds.ts`).
-7. Leave `AUTO_PUBLISH` off until a few days of runs have been reviewed by hand.
+7. Leave `AUTO_PUBLISH` off until a few days of runs have been reviewed by hand. When you turn it on, every post that passes the identifier check is published; set `MIN_QUALITY_SCORE` in Settings to hold low-scoring posts for review.
 
 ## How to add an author
 
@@ -64,11 +64,13 @@ Ingest is tolerant: a feed that fails or returns no items is logged as a warning
 - `npm run generate -- --dry-run --limit 1` generates without writing anything — use it after changing prompts or feeds.
 - Security: `/admin` has no auth yet (deferred by CLAUDE.md) — put it behind Vercel password protection or a proxy until auth lands. Server actions are same-origin only (Next.js checks the `Origin` header). Markdown never renders raw HTML and unsafe URL schemes are dropped. Ad slot HTML is injected verbatim — paste only your own ad code. Security headers (`nosniff`, `SAMEORIGIN`, referrer policy, permissions policy) are set in `next.config.ts`.
 
+## Re-verification
+
+Published guides whose last verification is older than 90 days appear on the dashboard under "Due for re-verification" (also listed weekly by `npm run scheduler`, Monday 10:00, and by `npm run generate -- --list-refresh`). "Refresh" regenerates the body, quick answer, FAQ and affected builds from fresh sources, stores a new quality score and moves the post to Review; title, slug, meta and screenshots are kept.
+
 ## Not implemented yet (from CLAUDE.md)
 
 - Auth for `/admin` (deferred).
 - Supabase Storage adapter (`src/lib/storage.ts` is local disk; the interface is ready).
 - IndexNow key file at `/{key}.txt` (serve from `public/` at go-live) — the ping itself is wired.
-- Weekly re-verification job for posts older than 90 days.
-- Author-page pagination beyond 50 posts.
 - macOS / iOS / Android categories and email subscribe (deferred).

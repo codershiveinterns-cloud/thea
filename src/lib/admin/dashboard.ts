@@ -5,6 +5,7 @@
  */
 import { QUALITY_GATE_MIN } from "@/lib/constants";
 import { parseRunHistory, summarizeReport, type RunHistoryEntry } from "@/pipeline/run";
+import { listDueForReverification } from "@/pipeline/reverify";
 import type { PipelineReport } from "@/pipeline/log";
 import type { PostStatus } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -56,8 +57,11 @@ export type DashboardSettings = {
 
 export type LastRun = { finishedAt: string; ok: boolean; dryRun: boolean; summary: string; errors: string[] } | null;
 
+export type ReverifyItem = { id: string; title: string; categoryName: string; verifiedAt: Date; publishedAt: Date | null };
+
 export type DashboardData = {
   lastRun: LastRun;
+  reverifyQueue: ReverifyItem[];
   runHistory: RunHistoryEntry[];
   statusCounts: StatusCounts;
   reviewQueue: ReviewQueueItem[];
@@ -139,6 +143,11 @@ async function getDashboardSettings(): Promise<DashboardSettings> {
   };
 }
 
+async function getReverifyQueue(): Promise<ReverifyItem[]> {
+  const rows = await listDueForReverification(10);
+  return rows.map((p) => ({ id: p.id, title: p.title, categoryName: p.category.name, verifiedAt: p.lastVerifiedAt ?? p.publishedAt ?? p.updatedAt, publishedAt: p.publishedAt }));
+}
+
 async function getRunHistory(): Promise<RunHistoryEntry[]> {
   return parseRunHistory((await getAllSettings()).PIPELINE_RUN_HISTORY).slice(0, 8);
 }
@@ -161,7 +170,7 @@ async function getLastRun(): Promise<LastRun> {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const [statusCounts, reviewQueue, verifyQueue, queuedCount, next, recentActivity, settings, lastRun, runHistory] = await Promise.all([
+  const [statusCounts, reviewQueue, verifyQueue, queuedCount, next, recentActivity, settings, lastRun, runHistory, reverifyQueue] = await Promise.all([
     getStatusCounts(),
     getReviewQueue(),
     getVerifyQueue(),
@@ -171,6 +180,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     getDashboardSettings(),
     getLastRun(),
     getRunHistory(),
+    getReverifyQueue(),
   ]);
 
   return {
@@ -182,5 +192,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     settings,
     lastRun,
     runHistory,
+    reverifyQueue,
   };
 }

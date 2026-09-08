@@ -90,15 +90,15 @@ Posts are assigned round-robin among authors whose categoryFocus matches.
 8. Featured image: auto-generate a 1200x630 branded image via /api/og with the title.
 9. Publish decision (Setting AUTO_PUBLISH, default false):
    - AUTO_PUBLISH=false → status REVIEW; human publishes from /admin.
-   - AUTO_PUBLISH=true  → score ≥ 85 AND no hallucinated identifiers → PUBLISHED
-     immediately (publishedAt = now, sitemap updated, IndexNow ping);
-     score < 85 → REVIEW. Post shows "Verified: pending" until a human sets testedOnBuild.
+   - AUTO_PUBLISH=true  → PUBLISHED immediately (publishedAt = now, sitemap updated,
+     IndexNow ping) unless the identifier check fails or score < Setting MIN_QUALITY_SCORE
+     (default 0 = no floor) → REVIEW. Post shows "Verified: pending" until a human sets testedOnBuild.
    Every auto-published post is listed in the admin "Published today — verify" queue.
 
 ## Hard rules
 - With AUTO_PUBLISH=false nothing goes live without a human clicking Publish.
-- With AUTO_PUBLISH=true only posts that pass the quality gate go live; anything
-  flagged for hallucinated identifiers is blocked regardless of score.
+- With AUTO_PUBLISH=true anything flagged for hallucinated identifiers is blocked
+  regardless of score; MIN_QUALITY_SCORE (Settings) optionally holds low scores for review.
 - Auto-published posts always carry a generated featured image; a human adds real
   screenshots and testedOnBuild afterwards from the "verify" queue.
 - Never invent identifiers (KB, build, error code) — only ones from the source feed.
@@ -135,6 +135,7 @@ Settings (ad slot HTML per placement, posts-per-run) · "Run pipeline now" butto
 2. Public site + all SEO + OG images + Lighthouse ≥ 95 on the post page
 3. Pipeline + `npm run generate` + `npm run scheduler` + quality gate + AUTO_PUBLISH + tests
 4. Polish: error handling/logging, sanitisation, README, list of anything unimplemented
+   + weekly re-verification list (published > 90 days) with a "Refresh" action → REVIEW
 5. Go-live (see section above) — only when asked
 
 ## Deferred (do not build until asked)

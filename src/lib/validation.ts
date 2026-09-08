@@ -97,6 +97,7 @@ export type KeywordInput = z.infer<typeof keywordInputSchema>;
 export const settingsInputSchema = z.object({
   POSTS_PER_DAY: z.coerce.number().int().min(1).max(POSTS_PER_DAY_MAX).default(2),
   AUTO_PUBLISH: z.boolean().default(false),
+  MIN_QUALITY_SCORE: z.coerce.number().int().min(0).max(100).default(0),
   SCHEDULER_ENABLED: z.boolean().default(true),
   INDEXNOW_KEY: z.string().trim().max(128).default(""),
   GA_MEASUREMENT_ID: z.string().trim().max(40).default(""),

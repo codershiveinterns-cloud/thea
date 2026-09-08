@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { LinkButton } from "@/components/ui/button";
 import { Card, Notice, PageHeader } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/dates";
+import { REVERIFY_AFTER_DAYS } from "@/lib/constants";
 import { KeywordQueue } from "@/components/admin/dashboard/keyword-queue";
 import { RecentActivity } from "@/components/admin/dashboard/recent-activity";
 import { ReviewQueue } from "@/components/admin/dashboard/review-queue";
 import { RunPipelineButton } from "@/components/admin/dashboard/run-pipeline-button";
 import { StatCards } from "@/components/admin/dashboard/stat-cards";
 import { VerifyQueue } from "@/components/admin/dashboard/verify-queue";
+import { ReverifyQueue } from "@/components/admin/dashboard/reverify-queue";
 import { getDashboardData } from "@/lib/admin/dashboard";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -28,6 +30,12 @@ export default async function AdminDashboardPage() {
       />
 
       <StatCards counts={data.statusCounts} />
+
+      <div className="mt-6">
+        <Card title="Due for re-verification" actions={<span className="text-xs text-zinc-500">Published guides last verified over {REVERIFY_AFTER_DAYS} days ago</span>}>
+          <ReverifyQueue items={data.reverifyQueue.map((i) => ({ ...i, verifiedAt: i.verifiedAt.toISOString() }))} />
+        </Card>
+      </div>
 
       {data.runHistory.length > 0 ? (
         <details className="mt-6 rounded-lg border border-zinc-200 bg-white">

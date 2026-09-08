@@ -4,7 +4,7 @@
  */
 import { z } from "zod";
 import { generateStructured, type AiUsage } from "@/lib/ai";
-import { FAQ_MIN, QUALITY_GATE_MIN } from "@/lib/constants";
+import { FAQ_MIN } from "@/lib/constants";
 import { identifiersNotInSources } from "./extract";
 import type { GeneratedPost } from "./generate";
 
@@ -38,11 +38,14 @@ export function structureProblems(post: GeneratedPost): string[] {
   return problems;
 }
 
-/** The publish decision from CLAUDE.md step 9. Pure. */
-export function decidePublish(input: { autoPublish: boolean; score: number; flaggedIdentifiers: string[] }): "PUBLISHED" | "REVIEW" {
+/**
+ * The publish decision (CLAUDE.md step 9). With AUTO_PUBLISH on, every post is published unless the
+ * identifier check failed or its score is below Setting MIN_QUALITY_SCORE (default 0 = no score floor). Pure.
+ */
+export function decidePublish(input: { autoPublish: boolean; score: number; flaggedIdentifiers: string[]; minScore?: number }): "PUBLISHED" | "REVIEW" {
   if (!input.autoPublish) return "REVIEW";
   if (input.flaggedIdentifiers.length > 0) return "REVIEW";
-  return input.score >= QUALITY_GATE_MIN ? "PUBLISHED" : "REVIEW";
+  return input.score >= (input.minScore ?? 0) ? "PUBLISHED" : "REVIEW";
 }
 
 export async function qualityGate(post: GeneratedPost, sourcesText: string): Promise<QualityResult> {
@@ -60,5 +63,5 @@ export async function qualityGate(post: GeneratedPost, sourcesText: string): Pro
   const score = Math.max(0, Math.min(100, Math.round(data.score)));
   const flagged = Array.from(new Set([...deterministic, ...data.hallucinatedIdentifiers.map((s) => s.trim()).filter(Boolean)]));
   const notes = [data.notes.trim(), problems.length ? `Structure: ${problems.join("; ")}` : "", flagged.length ? `Unsupported identifiers: ${flagged.join(", ")}` : ""].filter(Boolean).join("\n");
-  return { score, notes, flaggedIdentifiers: flagged, passes: score >= QUALITY_GATE_MIN && flagged.length === 0, usage };
+  return { score, notes, flaggedIdentifiers: flagged, passes: flagged.length === 0, usage };
 }

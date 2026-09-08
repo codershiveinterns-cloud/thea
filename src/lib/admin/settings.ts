@@ -22,6 +22,7 @@ function readSettingsForm(fd: FormData): Record<string, string | boolean> {
   return {
     POSTS_PER_DAY: fdString(fd, "POSTS_PER_DAY"),
     AUTO_PUBLISH: fdBool(fd, "AUTO_PUBLISH"),
+    MIN_QUALITY_SCORE: fdString(fd, "MIN_QUALITY_SCORE"),
     SCHEDULER_ENABLED: fdBool(fd, "SCHEDULER_ENABLED"),
     INDEXNOW_KEY: fdString(fd, "INDEXNOW_KEY"),
     GA_MEASUREMENT_ID: fdString(fd, "GA_MEASUREMENT_ID"),
