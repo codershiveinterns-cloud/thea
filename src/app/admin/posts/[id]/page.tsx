@@ -37,7 +37,7 @@ export default async function EditPostPage({ params, searchParams }: Props) {
   if (!post) notFound();
 
   const suggestedRelated = suggestRelatedPosts(post, candidatePosts, RELATED_POSTS_MAX);
-  const publishCheck = validateForPublish(post);
+  const publishCheck = validateForPublish(post, post.category.slug);
 
   const flash =
     sp.saved === "1"

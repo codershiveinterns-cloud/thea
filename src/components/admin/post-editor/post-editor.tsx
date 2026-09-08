@@ -366,7 +366,7 @@ export function PostEditor({ post, categories, authors, candidatePosts, suggeste
             </Card>
 
             <Card title="Body">
-              <BodyEditor value={values.body} onChange={(body) => update({ body })} postId={post?.id ?? null} preview={preview} error={errors.body} />
+              <BodyEditor categorySlug={categorySlug} value={values.body} onChange={(body) => update({ body })} postId={post?.id ?? null} preview={preview} error={errors.body} />
             </Card>
 
             <Card title="FAQ">

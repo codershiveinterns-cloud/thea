@@ -9,6 +9,7 @@ import { sendPipelineAlert } from "@/lib/alerts";
 import { pingIndexNow } from "@/lib/indexing";
 import { suggestRelatedPosts } from "@/lib/post-utils";
 import { ogImagePath } from "@/lib/seo";
+import { structureFor } from "@/lib/post-structure";
 import { getAllSettings, settingBool, settingInt } from "@/lib/settings";
 import { slugify } from "@/lib/slug";
 import { extractIdentifiers, keywordsFromItem, type FeedItem, type Identifiers } from "./extract";
@@ -45,11 +46,15 @@ export const INGEST_MAX_AGE_DAYS = 14;
 /** Safety cap so one run can't flood the keyword queue. */
 export const INGEST_MAX_NEW_KEYWORDS = 20;
 
-export async function ingest(feedUrls: string[], log: RunLog, dryRun: boolean): Promise<{ feeds: PipelineReport["ingest"]["feeds"]; newKeywords: number; items: FeedItem[] }> {
+export type IngestOptions = { maxAgeDays?: number; maxNew?: number };
+
+export async function ingest(feedUrls: string[], log: RunLog, dryRun: boolean, opts: IngestOptions = {}): Promise<{ feeds: PipelineReport["ingest"]["feeds"]; newKeywords: number; items: FeedItem[] }> {
+  const maxAgeDays = opts.maxAgeDays ?? INGEST_MAX_AGE_DAYS;
+  const maxNew = opts.maxNew ?? INGEST_MAX_NEW_KEYWORDS;
   const results = await fetchFeeds(feedUrls);
   const feeds = results.map((r) => ({ url: r.url, items: r.items.length, error: r.error }));
   for (const f of feeds) log[f.error ? "warn" : "info"]("ingest", `${f.url}: ${f.items} items${f.error ? ` (${f.error})` : ""}`);
-  const cutoff = Date.now() - INGEST_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+  const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
   const all = results.flatMap((r) => r.items);
   // Same-day coverage: only recent items become keywords. Undated items are kept (some feeds omit dates).
   const items = all.filter((it) => !it.published || it.published.getTime() >= cutoff).sort((a, b) => (b.published?.getTime() ?? 0) - (a.published?.getTime() ?? 0));
@@ -59,7 +64,7 @@ export async function ingest(feedUrls: string[], log: RunLog, dryRun: boolean): 
   let created = 0;
   outer: for (const item of items) {
     for (const cand of keywordsFromItem(item)) {
-      if (created >= INGEST_MAX_NEW_KEYWORDS) break outer;
+      if (created >= maxNew) break outer;
       const key = cand.phrase.toLowerCase();
       if (existing.has(key)) continue;
       const categoryId = catId(cand.categorySlug);
@@ -69,7 +74,7 @@ export async function ingest(feedUrls: string[], log: RunLog, dryRun: boolean): 
       if (!dryRun) await db.keyword.create({ data: { phrase: cand.phrase, categoryId, source: "FEED", status: "QUEUED" } });
     }
   }
-  log.info("ingest", `${all.length} feed items, ${items.length} from the last ${INGEST_MAX_AGE_DAYS} days → ${created} new keyword${created === 1 ? "" : "s"}${dryRun ? " (dry run, not saved)" : ""}`);
+  log.info("ingest", `${all.length} feed items, ${items.length} from the last ${maxAgeDays} days → ${created} new keyword${created === 1 ? "" : "s"}${dryRun ? " (dry run, not saved)" : ""}`);
   return { feeds, newKeywords: created, items };
 }
 
@@ -152,7 +157,7 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
   // 6. quality gate
   let quality;
   try {
-    quality = await qualityGate(post, res.combinedText);
+    quality = await qualityGate(post, res.combinedText, structureFor(kw.categorySlug));
     ctx.usage.inputTokens += quality.usage.inputTokens;
     ctx.usage.outputTokens += quality.usage.outputTokens;
   } catch (err) {

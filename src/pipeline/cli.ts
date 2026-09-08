@@ -7,11 +7,11 @@
  *   --ingest-only    fetch feeds and queue keywords, generate nothing
  *   --list-refresh   list published posts due for re-verification (older than 90 days) and exit
  */
+import "./env";
 import { db } from "@/lib/db";
 import { runPipeline, summarizeReport, isCategorySlug } from "./run";
 import { listDueForReverification } from "./reverify";
 
-process.loadEnvFile?.(".env");
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(name);

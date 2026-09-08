@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { regenerateSection } from "@/lib/admin/pipeline";
+import { STRUCTURE_SPECS, structureFor, validateBodyStructure, type StructureKind } from "@/lib/post-structure";
 import { readingTimeMinutes, replaceH2Section, splitH2Sections, wordCount } from "@/lib/post-utils";
 import { MarkdownPreview } from "./markdown-preview";
 
@@ -12,42 +13,20 @@ const MODES: { key: Mode; label: string }[] = [
   { key: "split", label: "Split" },
 ];
 
-// Same checks as validateForPublish() in src/lib/post-status.ts — keep these regexes in sync.
-const METHOD_1_RE = /^##\s+Method\s+1\b/m;
-const IF_NOTHING_WORKED_RE = /^##\s+If nothing worked/m;
+// Same checks as validateForPublish() in src/lib/post-status.ts (shared src/lib/post-structure.ts).
 const MIN_BODY_CHARS = 300;
 
-function structureHints(body: string): string[] {
-  const hints: string[] = [];
-  if (!METHOD_1_RE.test(body)) hints.push('Missing an H2 that starts with "Method 1:" — put each fix under "## Method 1: …", "## Method 2: …".');
-  if (!IF_NOTHING_WORKED_RE.test(body)) hints.push('Missing the "## If nothing worked" section.');
+function structureHints(body: string, kind: StructureKind): string[] {
+  const hints = validateBodyStructure(body, kind);
   if (body.trim().length < MIN_BODY_CHARS) hints.push(`Body is thin (under ~${MIN_BODY_CHARS} characters).`);
   return hints;
 }
 
-const TEMPLATE = [
-  "One or two sentences on what the problem is, when it appears, and who it affects.",
-  "",
-  "## Method 1: Name the quickest fix",
-  "",
-  "1. First step — say where to click and what the screen should show.",
-  "2. Second step.",
-  "3. Restart and check whether the problem is gone.",
-  "",
-  "## Method 2: Name the next fix",
-  "",
-  "1. First step.",
-  "2. Second step.",
-  "",
-  "## If nothing worked",
-  "",
-  "What to try as a last resort, and when to wait for a fix from Microsoft.",
-  "",
-].join("\n");
-
 type Props = {
   value: string;
   onChange: (next: string) => void;
+  /** Category slug of the post — picks the structure (release / fix / how-to) for hints and the template. */
+  categorySlug: string;
   /** null for unsaved posts — section regeneration needs a saved post id */
   postId: string | null;
   /** Full post preview rendered in Preview mode */
@@ -58,7 +37,9 @@ type Props = {
 const TEXTAREA_CLASS =
   "block w-full min-h-[28rem] resize-y rounded-md border border-zinc-300 bg-white px-3 py-2 font-mono text-[13px] leading-5 text-zinc-900 shadow-xs placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
 
-export function BodyEditor({ value, onChange, postId, preview, error }: Props) {
+export function BodyEditor({ value, onChange, categorySlug, postId, preview, error }: Props) {
+  const kind = structureFor(categorySlug);
+  const spec = STRUCTURE_SPECS[kind];
   const [mode, setMode] = useState<Mode>("edit");
   const [regenPending, startRegen] = useTransition();
   const [regenIndex, setRegenIndex] = useState<number | null>(null);
@@ -72,7 +53,7 @@ export function BodyEditor({ value, onChange, postId, preview, error }: Props) {
 
   const { sections } = splitH2Sections(value);
   const words = wordCount(value);
-  const hints = structureHints(value);
+  const hints = structureHints(value, kind);
 
   function regenerate(index: number, heading: string) {
     if (!postId) return;
@@ -92,7 +73,7 @@ export function BodyEditor({ value, onChange, postId, preview, error }: Props) {
       name="body"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder={'Markdown. Use "## Method 1: …" per fix and end with "## If nothing worked".'}
+      placeholder={`Markdown. Required H2s for ${spec.label.toLowerCase()}: ${spec.headings.join(", ")}.`}
       spellCheck
       className={`${TEXTAREA_CLASS} ${mode === "preview" ? "hidden" : ""}`}
       aria-invalid={error ? true : undefined}
@@ -123,7 +104,7 @@ export function BodyEditor({ value, onChange, postId, preview, error }: Props) {
             {words} words · {readingTimeMinutes(value)} min read
           </span>
           {!value.trim() ? (
-            <Button size="sm" intent="ghost" onClick={() => onChange(TEMPLATE)}>
+            <Button size="sm" intent="ghost" onClick={() => onChange(spec.template)}>
               Insert template
             </Button>
           ) : null}
@@ -189,7 +170,7 @@ export function BodyEditor({ value, onChange, postId, preview, error }: Props) {
             </ul>
           ) : (
             <p className="mt-1 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
-              Structure looks good: numbered methods and an “If nothing worked” section are present.
+              Structure looks good: all required sections for this article type are present.
             </p>
           )}
         </div>

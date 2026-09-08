@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { generateStructured, type AiUsage } from "@/lib/ai";
 import { FAQ_MAX, FAQ_MIN } from "@/lib/constants";
+import { STRUCTURE_SPECS, sentenceCase, structureFor, validateBodyStructure, type StructureKind } from "@/lib/post-structure";
 import { slugify } from "@/lib/slug";
 import { faqItemSchema } from "@/lib/validation";
 
@@ -33,10 +34,7 @@ export const generatedPostSchema = z.object({
     .string()
     .trim()
     .min(400)
-    .refine((b) => (b.match(/^##\s+Method\s+\d+/gm) ?? []).length >= 3, "Body must contain at least 3 \"## Method N:\" sections")
     .refine((b) => b.split(/\s+/).length >= MIN_BODY_WORDS, `Body must be at least ${MIN_BODY_WORDS} words`)
-    .refine((b) => /^##\s+Method\s+1\b/m.test(b), 'Body must contain "## Method 1: …"')
-    .refine((b) => /^##\s+If nothing worked/m.test(b), 'Body must contain "## If nothing worked"')
     .refine((b) => !/<\/?[a-z][^>]*>/i.test(b), "Body must be markdown without raw HTML"),
   affectedBuilds: z.array(z.string().trim().min(2)).max(8),
   faq: z.array(faqItemSchema).min(FAQ_MIN).max(FAQ_MAX),
@@ -46,14 +44,16 @@ export const generatedPostSchema = z.object({
 });
 export type GeneratedPost = z.infer<typeof generatedPostSchema>;
 
-export const POST_STRUCTURE_RULES = `Every article follows this exact structure:
-- title: the target keyword phrased naturally (this becomes the H1; do not repeat it as a heading in the body).
+export function postStructureRules(kind: StructureKind): string {
+  return `Every article follows this exact structure:
+- title: the target keyword phrased naturally, in sentence case (capitalise only the first word, proper nouns and identifiers like KB5065426 or Windows 11). This becomes the H1; do not repeat it as a heading in the body.
 - quickAnswer: 2–3 sentences that answer the title outright.
-- body: markdown only, no HTML, at least 700 words (aim for 800–1200). Start with one or two paragraphs that say what the problem/update is, who it affects and why it happens. Then one H2 per fix or section, in order: "## Method 1: …", "## Method 2: …", "## Method 3: …" (at least 3 methods, up to 6, each with numbered steps saying exactly where to click and what the screen shows, plus a sentence on when to use that method and what to expect afterwards), and finally "## If nothing worked". For a "What's new" release article, use "## Method N:" headings for "How to install" / "How to check your build" and put the change list in the intro as bullet points. Never use H1 (#) in the body.
+- body: markdown only, no HTML, at least 700 words (aim for 800–1200). Start with one or two paragraphs that say what this is, who it affects and why it matters. Never use H1 (#) in the body. ${STRUCTURE_SPECS[kind].promptRules}
 - affectedBuilds: the Windows versions/builds the article applies to, copied from the sources (e.g. "Windows 11 24H2", "Build 26100.6584").
 - faq: ${FAQ_MIN}–${FAQ_MAX} questions a reader would type into Google, each answered in 1–3 sentences.
-- metaTitle (≤ 70 chars) and metaDescription (≤ 170 chars) for search results.
+- metaTitle (≤ 70 chars, sentence case) and metaDescription (≤ 170 chars) for search results.
 - internalLinkSuggestions: 3–5 short titles of related articles a reader would want next.`;
+}
 
 export const FACT_RULES = `Facts: you may only state facts that appear in the SOURCES section. Every KB number, build number, version and error code you write must be copied from the sources verbatim — never invent or guess one, and if the sources do not name one, do not name one. If the sources do not support a step, describe it generically (e.g. "run the Windows Update troubleshooter") rather than inventing specifics. Never mention that you are an AI or refer to "the sources" in the article text.`;
 
@@ -66,10 +66,10 @@ export type GenerationInput = {
   existingTitles: string[];
 };
 
-export function buildSystemPrompt(author: { name: string; stylePrompt: string }): string {
+export function buildSystemPrompt(author: { name: string; stylePrompt: string }, kind: StructureKind = "fix"): string {
   return [
     "You write for Thea, a site that publishes same-day coverage of Windows updates and step-by-step fixes for Windows 11 problems. Readers are ordinary Windows users, not IT pros.",
-    POST_STRUCTURE_RULES,
+    postStructureRules(kind),
     FACT_RULES,
     `Author voice (${author.name}): ${author.stylePrompt}`,
     "Return only the JSON object.",
@@ -87,9 +87,10 @@ export function buildUserPrompt(input: GenerationInput): string {
 }
 
 export async function generatePost(input: GenerationInput): Promise<{ post: GeneratedPost; usage: AiUsage }> {
+  const kind = structureFor(input.categorySlug);
   const { data, usage } = await generateStructured({
     schema: generatedPostOutput,
-    system: buildSystemPrompt(input.author),
+    system: buildSystemPrompt(input.author, kind),
     user: buildUserPrompt(input),
     maxTokens: 16000,
   });
@@ -97,7 +98,10 @@ export async function generatePost(input: GenerationInput): Promise<{ post: Gene
   if (!strict.success) {
     throw new Error(`Generated post failed validation: ${strict.error.issues.map((i) => `${i.path.join(".") || "post"}: ${i.message}`).join("; ")}`);
   }
-  return { post: strict.data, usage };
+  const structure = validateBodyStructure(strict.data.body, kind);
+  if (structure.length) throw new Error(`Generated post failed structure check (${kind}): ${structure.join(" ")}`);
+  const post = { ...strict.data, title: sentenceCase(strict.data.title), metaTitle: sentenceCase(strict.data.metaTitle) };
+  return { post, usage };
 }
 
 // ---------- Regenerate one H2 section (editor button) ----------

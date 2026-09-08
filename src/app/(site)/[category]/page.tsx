@@ -24,10 +24,13 @@ function resolveCategory(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { category: slug } = await params;
   const category = resolveCategory(slug);
+  // Empty categories stay out of the index (and the sitemap) until they have content.
+  const { total } = await listPublishedPosts({ categorySlug: category.slug, take: 1 });
   return buildMetadata({
     title: categoryListingTitle(category, 1),
     description: category.description,
     path: categoryPath(category.slug),
+    noindex: total === 0,
   });
 }
 

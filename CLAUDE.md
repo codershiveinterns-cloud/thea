@@ -44,11 +44,16 @@ Monetised later via self-managed display ad slots (no affiliate networks, no buy
 Later (do NOT build yet): macos, ios, android.
 
 ## Post structure (every post, enforced by the pipeline and the editor template)
-- H1 = target keyword phrased naturally
+- H1 = target keyword phrased naturally, sentence case (also the meta title)
 - "Quick answer" box (2–3 sentences) at the top
 - Affected versions / builds (structured field, shown as a badge)
-- Numbered fix steps with an H2 per method: "Method 1: …", "Method 2: …"
-- "If nothing worked" section
+- Body H2s depend on the category (src/lib/post-structure.ts):
+  - windows-updates: Highlights (≥5 specific changes from the KB article's Improvements
+    section) · Known issues (from the KB article) · Should you install it? · How to get it
+  - update-problems / error-codes / app-not-working: "Method 1: …", "Method 2: …", "Method 3: …"
+    (≥3, numbered steps) · "If nothing worked"
+  - how-to: Steps (numbered) · What it changes · Undo
+- "Sources" line above the FAQ linking the Microsoft page(s) the post was generated from
 - FAQ (3–5 Q&As, also emitted as FAQPage schema)
 - Last-verified date + author + "Tested on: [build]" line
 - Internal links to 3–5 related posts (auto-suggested, editor confirms)
@@ -71,6 +76,8 @@ Posts are assigned round-robin among authors whose categoryFocus matches.
 - Setting: key, value
 
 ## Pipeline (src/pipeline)
+0. Backfill (one-time): `npm run backfill -- --months 6` queues every KB from the last N
+   months of the Windows 11 update history.
 1. Ingest: fetch Microsoft release-health / Windows update history RSS + Windows
    Insider blog RSS. Extract KB numbers, build numbers, error codes, feature names.
    Validate with Zod. Insert new Keyword rows (dedupe by phrase).

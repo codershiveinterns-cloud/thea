@@ -26,11 +26,11 @@ describe("structureProblems", () => {
   };
   it("lists every missing piece", () => {
     const p = structureProblems(post);
-    expect(p).toContain('No "## If nothing worked" section');
+    expect(p).toContain('Missing "## If nothing worked".');
     expect(p).toContain("Only 1 FAQ items");
-    expect(p).toContain("Body contains an H1");
+    expect(p).toContain("Body contains an H1 (the title is the H1).");
     expect(p).toContain("Body under 700 words (thin)");
-    expect(p).toContain("Only 1 Method sections (need 3+)");
+    expect(p).toContain('Only 1 "Method N:" section (need 3+).');
   });
 });
 

@@ -202,7 +202,7 @@ export async function transitionPost(rawPostId: string, to: PostStatus, formData
   const transition = TRANSITIONS[post.status].find((t) => t.to === target.data);
   let warnings: string[] = [];
   if (transition?.requiresPublishCheck) {
-    const check = validateForPublish(post);
+    const check = validateForPublish(post, post.category.slug);
     if (!check.ok) return { ok: false, message: check.errors.join(" ") };
     warnings = check.warnings;
   }

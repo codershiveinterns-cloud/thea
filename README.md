@@ -33,6 +33,7 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `npm run db:seed` / `db:seed:minimal` | Idempotent seed (`prisma/seed.ts`); minimal = categories and authors only |
 | `npm run db:studio` | Prisma Studio |
 | `npm run generate` | Run the content pipeline once. Flags: `-- --dry-run`, `-- --limit 1`, `-- --skip-ingest`, `-- --keyword "phrase" --category error-codes`, `-- --list-refresh` |
+| `npm run backfill -- --months 6` | One-time: queue every KB from the last N months of the Windows 11 update history (`--dry-run` to list) |
 | `npm run scheduler` | Local daily scheduler (node-cron, 09:00 local; `-- --now` runs today's batch immediately) |
 | `npm test` | Vitest: feed parser, identifier extraction, generated-post validator, quality-gate decision, selection |
 
@@ -105,8 +106,8 @@ One run = CLAUDE.md steps 1–9:
 1. **Ingest** — fetch the RSS/Atom feeds from Settings → Feeds (default: the Windows Insider blog), validate with Zod, keep items from the last 14 days, derive keywords (KB, build, version, error code, feature) and queue new ones (max 20 per run, deduped by phrase). Identifiers are only ever copied from feed text.
 2. **Select** — `POSTS_PER_DAY` queued keywords, newest first, never more than two per category per day.
 3. **Assign** — random author whose `categoryFocus` matches, avoiding the previous post's author.
-4. **Research** — fetch up to 5 source pages (KB article → feed link → official references), extract text. No sources → no post.
-5. **Generate** — one Anthropic call with a schema-constrained JSON output, then strict validation (Method H2s, "If nothing worked", 3–5 FAQ, meta lengths, no HTML).
+4. **Research** — fetch up to 5 source pages (KB article → feed link → official references), extract text; for KB articles the Improvements and Known issues sections are pulled out and put first. No sources → no post.
+5. **Generate** — one schema-constrained call, then strict validation: per-category structure (release: Highlights ≥5 / Known issues / Should you install it / How to get it; fix: Method 1–3+ / If nothing worked; how-to: Steps / What it changes / Undo), 3–5 FAQ, meta lengths, no HTML, sentence-case titles.
 6. **Quality gate** — deterministic identifier check against the sources + a second scoring call (0–100).
 7. **Internal links** — suggestions matched to published posts by category and title similarity.
 8. **Featured image** — the branded `/api/og` card for the title.

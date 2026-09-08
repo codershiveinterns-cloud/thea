@@ -122,7 +122,8 @@ export function Markdown({ content, className = "" }: { content: string; classNa
 export function PostBody({ body }: { body: string }) {
   const { intro, sections } = splitH2Sections(body);
   const methodIdx = sections.map((s, i) => (/^Method\s+\d+/i.test(s.heading) ? i : -1)).filter((i) => i >= 0);
-  const adBefore = methodIdx.length >= 2 ? methodIdx[methodIdx.length - 1] : -1;
+  // Before the last method; for release/how-to posts (no methods) before the last section.
+  const adBefore = methodIdx.length >= 2 ? methodIdx[methodIdx.length - 1] : sections.length >= 3 ? sections.length - 1 : -1;
   const used = new Map<string, number>();
   const components = makeComponents(used);
   return (

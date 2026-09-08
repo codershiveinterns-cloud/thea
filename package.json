@@ -16,6 +16,7 @@
         "postinstall": "prisma generate",
     "generate": "tsx src/pipeline/cli.ts",
     "scheduler": "tsx src/pipeline/scheduler.ts",
+    "backfill": "tsx src/pipeline/backfill.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

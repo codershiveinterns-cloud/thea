@@ -14,7 +14,8 @@ export async function sitemapEntries(): Promise<SitemapEntry[]> {
 
   return [
     { url: absoluteUrl("/"), lastModified: newest, changeFrequency: "daily", priority: 1 },
-    ...CATEGORIES.map<SitemapEntry>((c) => ({ url: absoluteUrl(categoryPath(c.slug)), lastModified: categoryDates[c.slug] ?? undefined, changeFrequency: "weekly", priority: 0.8 })),
+    // Categories with no published post are noindex and left out until they have content.
+    ...CATEGORIES.filter((c) => categoryDates[c.slug]).map<SitemapEntry>((c) => ({ url: absoluteUrl(categoryPath(c.slug)), lastModified: categoryDates[c.slug] ?? undefined, changeFrequency: "weekly", priority: 0.8 })),
     ...STATIC_PAGES.map<SitemapEntry>((path) => ({ url: absoluteUrl(path), changeFrequency: "monthly", priority: 0.3 })),
     ...authors.map<SitemapEntry>((a) => ({ url: absoluteUrl(authorPath(a.slug)), changeFrequency: "monthly", priority: 0.5 })),
     ...posts.map<SitemapEntry>((p) => ({

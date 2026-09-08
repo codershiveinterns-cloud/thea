@@ -20,7 +20,7 @@ export function HomeHero({ posts }: { posts: PostCardData[] }) {
         <h1 id="home-heading" className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-fg-muted">
           {HOME_HEADLINE}
         </h1>
-        <p className="text-xs text-fg-muted">Checked against Microsoft&apos;s release notes · reviewed by human editors</p>
+        <p className="text-xs text-fg-muted">Checked against Microsoft&apos;s release notes; hands-on verification added when available.</p>
       </div>
 
       {lead ? (

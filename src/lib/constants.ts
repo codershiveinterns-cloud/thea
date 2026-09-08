@@ -6,8 +6,11 @@
 export const SITE = {
   name: "Thea",
   tagline: "Same-day Windows update coverage and error-code fixes",
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
-} as const;
+  /** Read lazily so CLI/scheduler processes that load .env after module evaluation still get the real origin. */
+  get url(): string {
+    return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  },
+};
 
 export const CATEGORIES = [
   {

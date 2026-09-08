@@ -3,8 +3,8 @@ import { SITE } from "@/lib/constants";
 
 const POINTS = [
   { title: "Same-day coverage", body: "What changed and what broke, on the day Microsoft ships it." },
-  { title: "Tested on real builds", body: "Every guide shows the build it was tested on, or “verification pending” until an editor has checked it." },
-  { title: "Human-reviewed", body: "AI-assisted drafts checked against Microsoft’s release notes. No invented KB numbers, builds or error codes." },
+  { title: "Checked against Microsoft’s release notes", body: "Hands-on verification added when available: each guide shows the build it was tested on, or “Verified: pending” until then." },
+  { title: "No invented identifiers", body: "KB numbers, build numbers and error codes only ever come from Microsoft’s own pages, which every article links to." },
 ];
 
 /** Slim trust strip at the foot of the home page, linking to the full policy. */

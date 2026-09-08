@@ -15,7 +15,7 @@ const TITLE = `${SITE.name} — ${SITE.tagline}`;
 export const metadata: Metadata = {
   ...buildMetadata({
     title: TITLE,
-    description: `${SITE.tagline}. What changed in each Windows 11 update, what it broke, and step-by-step fixes reviewed by human editors.`,
+    description: `${SITE.tagline}. What changed in each Windows 11 update, what it broke, and step-by-step fixes checked against Microsoft's release notes.`,
     path: "/",
   }),
   // The root layout applies a "%s · Thea" template; the home title already carries the site name.

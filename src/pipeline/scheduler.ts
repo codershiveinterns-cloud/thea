@@ -3,13 +3,13 @@
  * generates the first post immediately and spaces the rest a few hours apart so publish
  * times look natural. Respects Setting SCHEDULER_ENABLED and POSTS_PER_DAY.
  */
+import "./env";
 import cron from "node-cron";
 import { POSTS_PER_DAY_MAX } from "@/lib/constants";
 import { getAllSettings, settingBool, settingInt } from "@/lib/settings";
 import { runPipeline, summarizeReport } from "./run";
 import { listDueForReverification } from "./reverify";
 
-process.loadEnvFile?.(".env");
 
 const CRON = process.env.SCHEDULER_CRON ?? "0 9 * * *";
 /** Weekly re-verification listing (Monday 10:00 local). The refresh itself is a human action in /admin. */

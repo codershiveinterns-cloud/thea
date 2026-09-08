@@ -28,6 +28,35 @@ export function buildSourceUrls(input: { phrase: string; link?: string | null; i
   return Array.from(new Set(urls.filter((u) => /^https?:\/\//.test(u)))).slice(0, MAX_SOURCES);
 }
 
+/**
+ * Pull the "Improvements" and "Known issues" sections out of a support.microsoft.com KB article's text.
+ * Section boundaries are the article's own headings; returns null for a section that is not present. Pure.
+ */
+export function extractKbSections(text: string): { improvements: string | null; knownIssues: string | null } {
+  const lines = text.split(/\r?\n/);
+  const isHeading = (l: string, re: RegExp) => re.test(l.trim()) && l.trim().length < 80;
+  const start = (re: RegExp) => lines.findIndex((l) => isHeading(l, re));
+  const STOP = /^(how to get this update|file information|references|need more help|want more options|summary)/i;
+  const grab = (from: number, endRes: RegExp[]) => {
+    if (from < 0) return null;
+    const out: string[] = [];
+    for (let i = from + 1; i < lines.length; i++) {
+      const l = lines[i].trim();
+      if (endRes.some((re) => isHeading(l, re)) || isHeading(l, STOP)) break;
+      if (l) out.push(l);
+    }
+    const body = out.join("\n").trim();
+    return body.length > 20 ? body.slice(0, 8000) : null;
+  };
+  const improvements = grab(start(/^(improvements|highlights)$/i), [/^known issues/i]);
+  const knownIssues = grab(start(/^known issues( in this update)?$/i), [/^(improvements|highlights)$/i]);
+  return { improvements, knownIssues };
+}
+
+export function isKbArticleUrl(url: string): boolean {
+  return /support\.microsoft\.com\/(?:[a-z-]+\/)?(?:help|topic)\/\d{6,7}|support\.microsoft\.com\/.*kb\d{6,7}/i.test(url);
+}
+
 export type ResearchSource = { url: string; text: string; ok: boolean; error?: string };
 export type ResearchResult = { sources: ResearchSource[]; combinedText: string; urls: string[] };
 
@@ -45,6 +74,15 @@ export async function research(urls: string[]): Promise<ResearchResult> {
     }),
   );
   const good = sources.filter((s) => s.ok);
-  const combinedText = good.map((s) => `SOURCE: ${s.url}\n${s.text}`).join("\n\n-----\n\n");
+  // KB articles: surface Improvements + Known issues first so the generator's Highlights come from them.
+  const kbBlocks = good
+    .filter((s) => isKbArticleUrl(s.url))
+    .map((s) => {
+      const { improvements, knownIssues } = extractKbSections(s.text);
+      if (!improvements && !knownIssues) return "";
+      return `KB ARTICLE SECTIONS (${s.url})\nIMPROVEMENTS:\n${improvements ?? "(none listed)"}\n\nKNOWN ISSUES:\n${knownIssues ?? "(Microsoft lists no known issues)"}`;
+    })
+    .filter(Boolean);
+  const combinedText = [...kbBlocks, ...good.map((s) => `SOURCE: ${s.url}\n${s.text}`)].join("\n\n-----\n\n");
   return { sources, combinedText, urls: good.map((s) => s.url) };
 }

@@ -10,4 +10,5 @@ export const POST_IDS = {
   faq: "post_faq",
   author: "post_author",
   related: "post_related",
+  sources: "post-sources",
 } as const;

@@ -8,6 +8,7 @@
  */
 import type { PostStatus } from "@prisma/client";
 import { RELATED_POSTS_MIN, FAQ_MIN } from "./constants";
+import { structureFor, validateBodyStructure } from "./post-structure";
 import { readFaq, readStringArray } from "./validation";
 
 export type Transition = {
@@ -73,7 +74,7 @@ export type PublishablePost = {
  * Hard errors block publishing. Warnings are shown but don't block (CLAUDE.md allows
  * publishing with a generated featured image and adding screenshots/testedOnBuild later).
  */
-export function validateForPublish(post: PublishablePost): PublishCheck {
+export function validateForPublish(post: PublishablePost, categorySlug = "error-codes"): PublishCheck {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -81,8 +82,7 @@ export function validateForPublish(post: PublishablePost): PublishCheck {
   if (!post.slug) errors.push("Slug is missing.");
   if (post.quickAnswer.trim().length < 40) errors.push("Quick answer is missing or too short (aim for 2–3 sentences).");
   if (post.body.trim().length < 300) errors.push("Body is too thin (under ~300 characters).");
-  if (!/^##\s+Method\s+1\b/m.test(post.body)) errors.push('Body must contain an H2 starting with "Method 1:".');
-  if (!/^##\s+If nothing worked/m.test(post.body)) errors.push('Body must contain an "## If nothing worked" section.');
+  for (const problem of validateBodyStructure(post.body, structureFor(categorySlug))) errors.push(`Structure: ${problem}`);
   if (!post.metaTitle.trim()) errors.push("Meta title is missing.");
   if (!post.metaDescription.trim()) errors.push("Meta description is missing.");
   if (readFaq(post.faq).length < FAQ_MIN) errors.push(`FAQ needs at least ${FAQ_MIN} questions.`);

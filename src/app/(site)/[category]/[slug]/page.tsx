@@ -12,6 +12,7 @@ import { PostMeta } from "@/components/site/post/post-meta";
 import { QuickAnswer } from "@/components/site/post/quick-answer";
 import { RelatedPosts } from "@/components/site/post/related-posts";
 import { Screenshots } from "@/components/site/post/screenshots";
+import { SourcesLine } from "@/components/site/post/sources-line";
 import { Toc } from "@/components/site/post/toc";
 import { VerificationLine } from "@/components/site/post/verification-line";
 import { RELATED_POSTS_MAX, RELATED_POSTS_MIN, SITE } from "@/lib/constants";
@@ -108,6 +109,7 @@ export default async function PostPage({ params }: Props) {
   const path = postPath(post.category.slug, post.slug);
   const builds = readStringArray(post.affectedBuilds);
   const screenshots = readStringArray(post.screenshots);
+  const sourceUrls = readStringArray(post.sourceUrls);
   const faq = readFaq(post.faq);
   const headings = bodyHeadings(post.body);
   const related = await relatedFor(post);
@@ -146,7 +148,11 @@ export default async function PostPage({ params }: Props) {
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <JsonLd data={jsonLd} />
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-14">
-        <article className="min-w-0 max-w-[70ch]">
+        {/* One TOC element: above the article on small screens, sticky right column on desktop (no duplicate). */}
+        <div className="lg:col-start-2 lg:row-start-1">
+          <Toc headings={headings} />
+        </div>
+        <article className="min-w-0 max-w-[70ch] lg:col-start-1 lg:row-start-1">
           <Breadcrumbs items={crumbs} />
           <h1 className="mt-5 font-display text-3xl font-bold leading-[1.15] tracking-tight text-fg sm:text-4xl lg:text-[2.75rem]">{post.title}</h1>
           <AffectedBuilds builds={builds} />
@@ -154,7 +160,6 @@ export default async function PostPage({ params }: Props) {
 
           <QuickAnswer text={post.quickAnswer} />
           <AdSlot placement="after-quick-answer" />
-          <Toc headings={headings} variant="inline" />
 
           <div className="mt-10">
             <PostBody body={post.body} />
@@ -162,12 +167,12 @@ export default async function PostPage({ params }: Props) {
 
           <Screenshots images={screenshots} title={post.title} />
           <AdSlot placement="end-of-article" />
+          <SourcesLine urls={sourceUrls} />
           <Faq items={faq} />
 
           <VerificationLine testedOnBuild={post.testedOnBuild} lastVerifiedAt={post.lastVerifiedAt} authorName={post.author.name} />
           <AuthorCard author={post.author} />
         </article>
-        <Toc headings={headings} variant="aside" />
       </div>
       <RelatedPosts posts={related} />
     </div>

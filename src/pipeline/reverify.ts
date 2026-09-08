@@ -8,6 +8,7 @@ import { REVERIFY_AFTER_DAYS } from "@/lib/constants";
 import { readStringArray } from "@/lib/validation";
 import { generatePost } from "./generate";
 import { qualityGate } from "./quality";
+import { structureFor } from "@/lib/post-structure";
 import { buildSourceUrls, research } from "./research";
 
 export function reverifyCutoff(now = new Date(), days = REVERIFY_AFTER_DAYS): Date {
@@ -52,7 +53,7 @@ export async function refreshPostFromSources(postId: string): Promise<RefreshRes
     sourcesText: sources.combinedText,
     existingTitles,
   });
-  const quality = await qualityGate(generated, sources.combinedText);
+  const quality = await qualityGate(generated, sources.combinedText, structureFor(post.category.slug));
 
   await db.post.update({
     where: { id: postId },

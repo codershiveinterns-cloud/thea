@@ -33,11 +33,7 @@ describe("generatedPostSchema", () => {
     expect(r.success).toBe(true);
     if (r.success) expect(r.data.slug).toBe("fix-0x800f0922-windows-11");
   });
-  it("rejects a body without Method 1 or If nothing worked", () => {
-    expect(generatedPostSchema.safeParse({ ...good, body: "## Steps\n" + "word ".repeat(200) }).success).toBe(false);
-  });
-  it("rejects fewer than 3 methods or a body under the word floor", () => {
-    expect(generatedPostSchema.safeParse({ ...good, body: good.body.replace("## Method 3: Free space\n\n1. Open Disk Management.\n\n", "") }).success).toBe(false);
+  it("rejects a body under the word floor (structure is checked separately per category)", () => {
     expect(generatedPostSchema.safeParse({ ...good, body: good.body.replace("word ".repeat(650), "word ".repeat(300)) }).success).toBe(false);
   });
   it("rejects raw HTML in the body", () => {
@@ -51,8 +47,9 @@ describe("generatedPostSchema", () => {
 
 describe("prompts", () => {
   it("include the structure rules, the author style and the sources", () => {
-    const sys = buildSystemPrompt({ name: "Dana", stylePrompt: "Calm and factual." });
+    const sys = buildSystemPrompt({ name: "Dana", stylePrompt: "Calm and factual." }, "fix");
     expect(sys).toContain("## Method 1");
+    expect(buildSystemPrompt({ name: "Dana", stylePrompt: "" }, "release")).toContain("## Highlights");
     expect(sys).toContain("Calm and factual.");
     const user = buildUserPrompt({ phrase: "kw", categorySlug: "error-codes", categoryName: "Error Codes", author: { name: "Dana", stylePrompt: "" }, sourcesText: "SOURCE TEXT", existingTitles: ["Existing post"] });
     expect(user).toContain("SOURCE TEXT");
