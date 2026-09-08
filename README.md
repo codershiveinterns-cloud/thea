@@ -49,6 +49,7 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `SCHEDULER_CRON` | no | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | production | HTTP Basic Auth for `/admin` and `/api/admin` (`src/middleware.ts`). Unset in development leaves the admin open on localhost; unset in production returns 503. |
 | `CRON_SECRET` | yes | `/api/cron/generate` refuses every call without it (bearer token, not Basic Auth). |
+| `RESEND_API_KEY` / `ALERT_EMAIL` / `ALERT_FROM` | optional | Email alert (Resend) when a pipeline run fails or creates no post. Skipped when unset. |
 | `INDEXNOW_KEY` | go-live | Same value as the `public/<key>.txt` filename. |
 
 Runtime settings that an editor changes (posts per day, auto-publish, ad slot HTML, IndexNow key, GA4 id, Search Console tag) live in the `Setting` table and are edited at `/admin/settings`, not in env.

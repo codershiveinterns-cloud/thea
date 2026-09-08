@@ -13,6 +13,7 @@
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | Vercel + local | Never committed, never logged (every error message is scrubbed). |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | Vercel | HTTP Basic Auth for `/admin` and `/api/admin`. Required in production (503 without them); optional locally. |
 | `CRON_SECRET` | Vercel + local | Required everywhere: `/api/cron/generate` returns 503 when unset and 401 without `Authorization: Bearer <CRON_SECRET>`. |
+| `RESEND_API_KEY` / `ALERT_EMAIL` / `ALERT_FROM` | Vercel | Pipeline alerts via Resend: sent when a run fails or creates no post (dry runs never alert). Free tier: `ALERT_FROM` must be `onboarding@resend.dev` and `ALERT_EMAIL` your Resend account email, unless you verify a domain. |
 | `LOG_LEVEL` | optional | `debug` \| `info` \| `warn` \| `error` (default `info` in production). Logs are one JSON line per event. |
 | `SCHEDULER_CRON` | local only | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
 
@@ -57,6 +58,7 @@ Ingest is tolerant: a feed that fails or returns no items is logged as a warning
 
 ## Operations
 
+- Alerts: a failed run or a run that created no post emails `ALERT_EMAIL` through Resend with the errors, warnings and per-keyword outcomes.
 - Every run is recorded: the last report on the dashboard, the last 20 summaries under "Recent pipeline runs" (with errors), and full logs on stdout as JSON lines.
 - `npm run generate -- --dry-run --limit 1` generates without writing anything — use it after changing prompts or feeds.
 - Security: `/admin` and `/api/admin` require HTTP Basic Auth (`ADMIN_USER` / `ADMIN_PASSWORD`, constant-time compare, 401 with `WWW-Authenticate`). `/api/cron/generate` uses the `CRON_SECRET` bearer token instead. Server actions are same-origin only (Next.js checks the `Origin` header). Markdown never renders raw HTML and unsafe URL schemes are dropped. Ad slot HTML is injected verbatim — paste only your own ad code. Security headers (`nosniff`, `SAMEORIGIN`, referrer policy, permissions policy) are set in `next.config.ts`.

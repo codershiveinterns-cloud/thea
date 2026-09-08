@@ -5,6 +5,7 @@
 import { db } from "@/lib/db";
 import { CATEGORY_SLUGS, POSTS_PER_DAY_MAX, SETTING_KEYS, categoryBySlug, type CategorySlug } from "@/lib/constants";
 import { describeAi } from "@/lib/ai";
+import { sendPipelineAlert } from "@/lib/alerts";
 import { pingIndexNow } from "@/lib/indexing";
 import { suggestRelatedPosts } from "@/lib/post-utils";
 import { ogImagePath } from "@/lib/seo";
@@ -267,6 +268,10 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
     log: log.entries,
   };
   if (!dryRun) {
+    // Email (Resend) when the run failed or created nothing. report.log shares `log.entries`, so this line lands in the saved report too.
+    const alert = await sendPipelineAlert(report, summarizeReport(report));
+    if (alert.reason) log.info("alert", alert.sent ? `email sent (${alert.reason})` : `email not sent (${alert.reason}): ${alert.detail}`);
+    report.ok = !log.entries.some((e) => e.level === "error");
     try {
       await db.setting.upsert({ where: { key: SETTING_KEYS.PIPELINE_LAST_RUN }, update: { value: JSON.stringify(report) }, create: { key: SETTING_KEYS.PIPELINE_LAST_RUN, value: JSON.stringify(report) } });
       await appendRunHistory(report);
