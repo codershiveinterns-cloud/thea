@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AiError, isFallbackConfigured, resolveModel, resolveProvider, shouldFallbackToGroq, withFallback } from "@/lib/ai";
+import { AiError, isFallbackConfigured, resolveFallbackModel, resolveModel, resolveProvider, shouldFallbackToGroq, withFallback } from "@/lib/ai";
 import { buildSourceUrls } from "../research";
 import { evergreenQuery, rankOfficialResults, searchMicrosoft } from "../search";
 
@@ -53,7 +53,13 @@ describe("Groq fallback", () => {
     expect(isFallbackConfigured()).toBe(false);
     process.env.GROQ_API_KEY = "gsk_test_1234567890";
     expect(isFallbackConfigured()).toBe(true);
-    expect(resolveModel("groq")).toBe("llama-3.3-70b-versatile");
+    expect(resolveModel("groq")).toBe("openai/gpt-oss-120b");
+    // The fallback ignores AI_MODEL (that is the primary's model) and uses GROQ_MODEL or the default.
+    process.env.AI_MODEL = "gemini-3.6-flash";
+    expect(resolveFallbackModel()).toBe("openai/gpt-oss-120b");
+    process.env.GROQ_MODEL = "llama-3.1-8b-instant";
+    expect(resolveFallbackModel()).toBe("llama-3.1-8b-instant");
+    delete process.env.GROQ_MODEL;
     process.env.AI_PROVIDER = "groq";
     delete process.env.AI_MODEL;
     expect(resolveProvider()).toBe("groq");

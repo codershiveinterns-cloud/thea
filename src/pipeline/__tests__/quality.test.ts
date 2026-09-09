@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decidePublish, structureProblems } from "../quality";
+import { decidePublish, onlyIdentifiers, structureProblems } from "../quality";
 import { pickAuthor, selectKeywords } from "../select";
 import { buildSourceUrls } from "../research";
 import { spreadDelays } from "../scheduler";
@@ -15,6 +15,12 @@ describe("decidePublish (CLAUDE.md step 9)", () => {
   it("honours MIN_QUALITY_SCORE when set", () => {
     expect(decidePublish({ autoPublish: true, score: 85, flaggedIdentifiers: [], minScore: 85 })).toBe("PUBLISHED");
     expect(decidePublish({ autoPublish: true, score: 84, flaggedIdentifiers: [], minScore: 85 })).toBe("REVIEW");
+  });
+});
+
+describe("onlyIdentifiers", () => {
+  it("keeps KB numbers, builds and error codes, drops product names", () => {
+    expect(onlyIdentifiers(["Windows 11", "KB5120998", " 0x800F0922 ", "OS Build 26200.9278", "24H2", "Microsoft"])).toEqual(["KB5120998", "0x800F0922", "OS Build 26200.9278"]);
   });
 });
 

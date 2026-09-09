@@ -15,7 +15,7 @@ import { z } from "zod";
 
 export type AiProvider = "anthropic" | "gemini" | "groq";
 
-const DEFAULT_MODEL: Record<AiProvider, string> = { anthropic: "claude-opus-5", gemini: "gemini-3.6-flash", groq: "llama-3.3-70b-versatile" };
+const DEFAULT_MODEL: Record<AiProvider, string> = { anthropic: "claude-opus-5", gemini: "gemini-3.6-flash", groq: "openai/gpt-oss-120b" };
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
 function env(name: string): string {
@@ -45,6 +45,11 @@ export function isAiConfigured(provider: AiProvider = resolveProvider()): boolea
 /** Groq is the rate-limit fallback for the primary provider; it needs its own key. */
 export function isFallbackConfigured(): boolean {
   return Boolean(env("GROQ_API_KEY"));
+}
+
+/** Model for the Groq fallback: GROQ_MODEL or the default — never AI_MODEL, which belongs to the primary provider. */
+export function resolveFallbackModel(): string {
+  return env("GROQ_MODEL") || DEFAULT_MODEL.groq;
 }
 
 export function describeAi(): string {
@@ -290,7 +295,7 @@ export async function generateStructured<T extends z.ZodTypeAny>(o: GenerateOpti
     return r.value;
   };
   const canFallback = provider !== "groq" && isFallbackConfigured();
-  const fallbackModel = resolveModel("groq");
+  const fallbackModel = resolveFallbackModel();
   const fallback = canFallback
     ? async () => {
         const r = await retryWithBackoff(() => callGroq(fallbackModel, o), { maxAttempts: 3 });

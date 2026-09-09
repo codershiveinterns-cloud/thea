@@ -44,3 +44,19 @@ describe("run history", () => {
     expect(parseRunHistory('[{"finishedAt":"x"},null,5]')).toHaveLength(1);
   });
 });
+
+describe("placeholders vs real HTML", async () => {
+  const { containsHtml, neutralizePlaceholders } = await import("@/lib/sanitize");
+  it("keeps <username>-style placeholders as inline code and leaves code untouched", () => {
+    expect(neutralizePlaceholders("Type C:\\Users\\<username> and press <Enter>.")).toBe("Type C:\\Users\\`<username>` and press `<Enter>`.");
+    expect(neutralizePlaceholders("Run `dir <path>` first")).toBe("Run `dir <path>` first");
+    expect(neutralizePlaceholders("```\n<config>\n```")).toBe("```\n<config>\n```");
+  });
+  it("does not disguise real tags, and containsHtml only flags real tags", () => {
+    expect(neutralizePlaceholders("<script>alert(1)</script>")).toBe("<script>alert(1)</script>");
+    expect(containsHtml("<script>alert(1)</script>")).toBe(true);
+    expect(containsHtml("Press <Enter> then type <KB number>")).toBe(false);
+    expect(containsHtml("a <b>bold</b> word")).toBe(true);
+    expect(containsHtml("<!-- comment -->")).toBe(true);
+  });
+});

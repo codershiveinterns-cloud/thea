@@ -45,7 +45,7 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `DIRECT_URL` | yes | Supabase direct connection (port 5432) for migrations. |
 | `NEXT_PUBLIC_SITE_URL` | yes | Canonical origin, no trailing slash. Used by sitemap, JSON-LD, OG images, IndexNow. |
 | `AI_PROVIDER` | for generation | `anthropic`, `gemini` or `groq`. Defaults to whichever key is set. |
-| `GROQ_API_KEY` / `GROQ_MODEL` | optional | Rate-limit fallback: a 429 from the primary provider that survives the retries re-runs that call on Groq (`llama-3.3-70b-versatile`). Unset = no fallback. The provider used is stored on the post (`aiProvider`) and in the run log. |
+| `GROQ_API_KEY` / `GROQ_MODEL` | optional | Rate-limit fallback: a 429 from the primary provider that survives the retries re-runs that call on Groq (`openai/gpt-oss-120b`); set `GROQ_MODEL` to change it. Unset = no fallback. The provider used is stored on the post (`aiProvider`) and in the run log. |
 | `AI_MODEL` | no | Model id for that provider (defaults `claude-opus-5` / `gemini-3.6-flash`). |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | for generation | Never commit or log them; `src/lib/ai.ts` redacts them from every error. Without a key, ingest still runs and generation stops with a clear error. |
 | `SCHEDULER_CRON` | no | Cron expression for `npm run scheduler` (default `0 9 * * *`). |

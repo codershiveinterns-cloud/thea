@@ -6,7 +6,7 @@ import { z } from "zod";
 import { generateStructured, type AiProvider, type AiUsage } from "@/lib/ai";
 import { FAQ_MIN } from "@/lib/constants";
 import { validateBodyStructure, type StructureKind } from "@/lib/post-structure";
-import { identifiersNotInSources } from "./extract";
+import { extractIdentifiers, identifiersNotInSources } from "./extract";
 import type { GeneratedPost } from "./generate";
 
 export type QualityResult = {
@@ -37,6 +37,19 @@ export function structureProblems(post: GeneratedPost, kind: StructureKind = "fi
 }
 
 /**
+ * Keep only strings that are actually identifiers (KB number, OS build, 0x error code). Graders sometimes
+ * list product names like "Windows 11" here; those are not identifiers and must not block publishing. Pure.
+ */
+export function onlyIdentifiers(items: string[]): string[] {
+  return items
+    .map((s) => s.trim())
+    .filter((s) => {
+      const ids = extractIdentifiers(s);
+      return ids.kb.length + ids.builds.length + ids.errorCodes.length > 0;
+    });
+}
+
+/**
  * The publish decision (CLAUDE.md step 9). With AUTO_PUBLISH on, every post is published unless the
  * identifier check failed or its score is below Setting MIN_QUALITY_SCORE (default 0 = no score floor). Pure.
  */
@@ -59,7 +72,7 @@ export async function qualityGate(post: GeneratedPost, sourcesText: string, kind
     user: `ARTICLE:\n${text}\n\nSOURCES:\n${sourcesText}${problems.length ? `\n\nKNOWN STRUCTURE PROBLEMS: ${problems.join("; ")}` : ""}`,
   });
   const score = Math.max(0, Math.min(100, Math.round(data.score)));
-  const flagged = Array.from(new Set([...deterministic, ...data.hallucinatedIdentifiers.map((s) => s.trim()).filter(Boolean)]));
+  const flagged = Array.from(new Set([...deterministic, ...onlyIdentifiers(data.hallucinatedIdentifiers)]));
   const notes = [data.notes.trim(), problems.length ? `Structure: ${problems.join("; ")}` : "", flagged.length ? `Unsupported identifiers: ${flagged.join(", ")}` : ""].filter(Boolean).join("\n");
   return { score, notes, flaggedIdentifiers: flagged, passes: flagged.length === 0, usage, provider };
 }

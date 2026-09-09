@@ -248,7 +248,7 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
   let ingestReport: PipelineReport["ingest"] = { feeds: [], newKeywords: 0 };
   let items: FeedItem[] = [];
 
-  log.info("run", `AI ${describeAi()}${isFallbackConfigured() ? " (Groq fallback on 429)" : ""} · daily cap ${cap}, made today ${madeToday}, this run up to ${perDay}, auto-publish ${autoPublish ? `on (min score ${minScore})` : "off"}${dryRun ? ", DRY RUN" : ""}`);
+  log.info("run", `AI ${describeAi()}${isFallbackConfigured() && !describeAi().startsWith("groq") ? " (Groq fallback on 429)" : ""} · daily cap ${cap}, made today ${madeToday}, this run up to ${perDay}, auto-publish ${autoPublish ? `on (min score ${minScore})` : "off"}${dryRun ? ", DRY RUN" : ""}`);
   try {
     if (!opts.skipIngest) {
       const r = await ingest(feedUrlsFromSetting(settings.FEED_URLS), log, dryRun);

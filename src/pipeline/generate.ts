@@ -6,6 +6,7 @@ import { z } from "zod";
 import { generateStructured, type AiProvider, type AiUsage } from "@/lib/ai";
 import { FAQ_MAX, FAQ_MIN } from "@/lib/constants";
 import { STRUCTURE_SPECS, sentenceCase, structureFor, validateBodyStructure, type StructureKind } from "@/lib/post-structure";
+import { containsHtml, neutralizePlaceholders } from "@/lib/sanitize";
 import { slugify } from "@/lib/slug";
 import { faqItemSchema } from "@/lib/validation";
 
@@ -35,7 +36,7 @@ export const generatedPostSchema = z.object({
     .trim()
     .min(400)
     .refine((b) => b.split(/\s+/).length >= MIN_BODY_WORDS, `Body must be at least ${MIN_BODY_WORDS} words`)
-    .refine((b) => !/<\/?[a-z][^>]*>/i.test(b), "Body must be markdown without raw HTML"),
+    .refine((b) => !containsHtml(b), "Body must be markdown without raw HTML"),
   affectedBuilds: z.array(z.string().trim().min(2)).max(8),
   faq: z.array(faqItemSchema).min(FAQ_MIN).max(FAQ_MAX),
   metaTitle: z.string().trim().min(10).max(70),
@@ -94,7 +95,8 @@ export async function generatePost(input: GenerationInput): Promise<{ post: Gene
     user: buildUserPrompt(input),
     maxTokens: 16000,
   });
-  const strict = generatedPostSchema.safeParse(data);
+  // <username>-style placeholders become inline code; real HTML still fails validation below.
+  const strict = generatedPostSchema.safeParse({ ...data, body: neutralizePlaceholders(data.body) });
   if (!strict.success) {
     throw new Error(`Generated post failed validation: ${strict.error.issues.map((i) => `${i.path.join(".") || "post"}: ${i.message}`).join("; ")}`);
   }
@@ -132,8 +134,8 @@ export async function generateSection(input: {
     `SOURCES:\n${input.sourcesText || "(no sources fetched — keep the steps generic and do not name identifiers)"}`,
   ].join("\n\n");
   const { data, usage } = await generateStructured({ schema: sectionOutput, system, user, maxTokens: 4000, effort: "medium" });
-  const content = data.content.trim().replace(/^#+\s.*\n?/m, "").trim();
+  const content = neutralizePlaceholders(data.content.trim().replace(/^#+\s.*\n?/m, "").trim());
   if (content.length < 30) throw new Error("Regenerated section came back empty.");
-  if (/<\/?[a-z][^>]*>/i.test(content)) throw new Error("Regenerated section contained HTML; discarded.");
+  if (containsHtml(content)) throw new Error("Regenerated section contained HTML; discarded.");
   return { content, usage };
 }
