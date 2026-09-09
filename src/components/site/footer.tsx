@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CATEGORIES, SITE } from "@/lib/constants";
 import { categoryPath } from "@/lib/seo";
+import { LEGAL_PAGES, legalPath } from "@/lib/legal";
 import { Logo } from "./header";
 
 const link = "inline-flex min-h-9 items-center text-fg-body hover:text-fg hover:underline";
@@ -8,7 +9,7 @@ const link = "inline-flex min-h-9 items-center text-fg-body hover:text-fg hover:
 export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-line bg-bg-2">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 text-sm sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 text-sm sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Logo />
           <p className="mt-4 max-w-sm leading-6 text-fg-body">
@@ -34,6 +35,18 @@ export function SiteFooter() {
             <li><Link href="/editorial-policy" className={link}>Editorial policy</Link></li>
             <li><Link href="/contact" className={link}>Contact</Link></li>
             <li><a href="/feed.xml" className={link}>RSS feed</a></li>
+          </ul>
+        </div>
+        <div>
+          <p className="font-display font-semibold text-fg">Legal</p>
+          <ul className="mt-3 space-y-1">
+            {LEGAL_PAGES.map((p) => (
+              <li key={p.slug}>
+                <Link href={legalPath(p.slug)} className={link}>
+                  {p.title}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

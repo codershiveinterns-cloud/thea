@@ -52,6 +52,7 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `ADMIN_USER` / `ADMIN_PASSWORD` | production | HTTP Basic Auth for `/admin` and `/api/admin` (`src/middleware.ts`). Unset in development leaves the admin open on localhost; unset in production returns 503. |
 | `CRON_SECRET` | yes | `/api/cron/generate` refuses every call without it (bearer token, not Basic Auth). |
 | `RESEND_API_KEY` / `ALERT_EMAIL` / `ALERT_FROM` | optional | Email alert (Resend) when a pipeline run fails or creates no post. Skipped when unset. |
+| `NEXT_PUBLIC_GA_ID` | optional | GA4 id (alternative to the Settings value). Loads only after the visitor accepts the cookie banner. |
 | `INDEXNOW_KEY` | go-live | Same value as the `public/<key>.txt` filename. |
 
 Runtime settings that an editor changes (posts per day, auto-publish, ad slot HTML, IndexNow key, GA4 id, Search Console tag) live in the `Setting` table and are edited at `/admin/settings`, not in env.
@@ -87,6 +88,7 @@ src/pipeline/         content pipeline (phase 3)
 | `/[category]/[slug]` | Post page with the full CLAUDE.md structure and Article + FAQPage + BreadcrumbList + Person JSON-LD |
 | `/author/[slug]` | Author profile + posts, Person JSON-LD |
 | `/about`, `/contact`, `/editorial-policy` | Static pages |
+| `/privacy-policy`, `/terms`, `/cookie-policy`, `/disclaimer`, `/advertising-disclosure`, `/copyright` | Legal pages (entity, contact and governing law are hard-coded in `src/lib/legal.ts`; bump `LEGAL.updated` when they change) |
 | `/search?q=` | Title/quick-answer search (noindex) |
 | `/sitemap.xml`, `/robots.txt`, `/feed.xml` | Generated from published posts |
 | `/api/og?title=&category=` | 1200×630 branded OG image (also the fallback featured image) |

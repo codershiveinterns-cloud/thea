@@ -89,6 +89,11 @@ export default function EditorialPolicyPage() {
       <p>
         An article that is still <strong>Verified: pending</strong> may show a branded cover image until its screenshots are added.
       </p>
+      <h2>Disclaimer</h2>
+      <p>
+        {SITE.name} is not affiliated with Microsoft, guides are informational and followed at your own risk, and articles carry a
+        &ldquo;Verified: pending&rdquo; badge until a hands-on check is done. The full <Link href="/disclaimer">disclaimer</Link> explains each point.
+      </p>
     </StaticPage>
   );
 }

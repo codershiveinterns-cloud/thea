@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CATEGORIES, SITE } from "@/lib/constants";
 import { categoryPath } from "@/lib/seo";
-import { ThemeToggle } from "./theme-toggle";
 
 export function Logo() {
   return (
@@ -40,7 +39,6 @@ export function SiteHeader() {
               <path d="m20 20-3.5-3.5" />
             </svg>
           </Link>
-          <ThemeToggle />
         </div>
       </div>
       <nav aria-label="Categories" className="border-t border-line lg:hidden">

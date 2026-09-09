@@ -3,8 +3,9 @@ import { CATEGORIES } from "@/lib/constants";
 import { allPublishedForIndex, categoryLastModified, listAuthorsWithPublished } from "@/lib/posts";
 import { absoluteUrl, authorPath, categoryPath, featuredImageFor, postPath } from "@/lib/seo";
 import type { SitemapEntry } from "@/lib/xml";
+import { LEGAL_PAGES, legalPath } from "@/lib/legal";
 
-const STATIC_PAGES = ["/about", "/contact", "/editorial-policy"] as const;
+const STATIC_PAGES = ["/about", "/contact", "/editorial-policy", ...LEGAL_PAGES.map((p) => legalPath(p.slug))] as const;
 
 export async function sitemapEntries(): Promise<SitemapEntry[]> {
   const [posts, categoryDates, authors] = await Promise.all([allPublishedForIndex(), categoryLastModified(), listAuthorsWithPublished()]);

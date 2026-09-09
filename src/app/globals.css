@@ -1,9 +1,6 @@
 @import "tailwindcss";
 
-/* Dark mode is opt-in per subtree: the public site sets data-theme on <html>; the admin ignores it. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
-/* ---------- Public-site design tokens (light) ---------- */
+/* ---------- Public-site design tokens (light only; the site has no dark mode) ---------- */
 :root {
   --bg: #ffffff;
   --bg-2: #f5f7fa;
@@ -24,25 +21,6 @@
   --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
-}
-
-[data-theme="dark"] {
-  --bg: #0e1116;
-  --bg-2: #161a21;
-  --bg-3: #1f252e;
-  --fg: #eef1f5;
-  --fg-body: #c9d0da;
-  --fg-muted: #98a3b3;
-  --line: #262d38;
-  --accent: #4cc2ff;
-  --accent-2: #86d6ff;
-  --accent-soft: #0f2a44;
-  --accent-fg: #06121d;
-  --code-bg: #1a2029;
-  --ok: #5fd39a;
-  --ok-soft: #0f2b1f;
-  --warn: #f2c66d;
-  --warn-soft: #33270c;
 }
 
 @theme inline {
@@ -85,9 +63,6 @@ body {
 
 .site {
   color-scheme: light;
-}
-[data-theme="dark"] .site {
-  color-scheme: dark;
 }
 
 @media (prefers-reduced-motion: reduce) {
