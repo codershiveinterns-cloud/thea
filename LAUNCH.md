@@ -14,6 +14,7 @@
 | `ADMIN_USER` / `ADMIN_PASSWORD` | Vercel | HTTP Basic Auth for `/admin` and `/api/admin`. Required in production (503 without them); optional locally. |
 | `CRON_SECRET` | Vercel + local | Required everywhere: `/api/cron/generate` returns 503 when unset and 401 without `Authorization: Bearer <CRON_SECRET>`. |
 | `RESEND_API_KEY` / `ALERT_EMAIL` / `ALERT_FROM` | Vercel | Pipeline alerts via Resend: sent when a run fails or creates no post (dry runs never alert). Free tier: `ALERT_FROM` must be `onboarding@resend.dev` and `ALERT_EMAIL` your Resend account email, unless you verify a domain. |
+| `GROQ_API_KEY` / `GROQ_MODEL` | optional | Rate-limit fallback provider for generation and the quality gate (see README). |
 | `LOG_LEVEL` | optional | `debug` \| `info` \| `warn` \| `error` (default `info` in production). Logs are one JSON line per event. |
 | `SCHEDULER_CRON` | local only | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
 
@@ -23,7 +24,7 @@ Runtime settings live in the `Setting` table and are edited at `/admin/settings`
 
 Local: `npm run scheduler` (node-cron, 09:00 local; first post immediately, the rest 2–3 h apart).
 
-Vercel: `vercel.json` runs `/api/cron/generate` daily at **03:30 UTC** (`30 3 * * *`). Vercel sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set on the project. Each run creates up to `POSTS_PER_DAY` posts; to spread them through the day add more cron entries (Pro plan; Hobby allows one daily cron).
+Vercel: `vercel.json` runs `/api/cron/generate` three times a day, at **03:30, 07:30 and 11:30 UTC**, one post per call; `POSTS_PER_DAY` caps the day and the per-category cap still applies. Vercel sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set on the project. Three cron entries need a Pro plan (Hobby allows two, once a day each) — on Hobby delete the 11:30 entry.
 
 ## Go-live steps (CLAUDE.md phase 5)
 

@@ -85,6 +85,8 @@ model Post {
   qualityScore    Int?
   qualityNotes    String?
   generatedBy     GeneratedBy @default(HUMAN)
+  /// "provider/model" that produced the current body (null for human-written posts)
+  aiProvider      String?
   testedOnBuild   String?
   lastVerifiedAt  DateTime?
   publishedAt     DateTime?

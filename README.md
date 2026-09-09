@@ -44,7 +44,8 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `DATABASE_URL` | yes | Supabase pooled connection (port 6543, `?pgbouncer=true`). |
 | `DIRECT_URL` | yes | Supabase direct connection (port 5432) for migrations. |
 | `NEXT_PUBLIC_SITE_URL` | yes | Canonical origin, no trailing slash. Used by sitemap, JSON-LD, OG images, IndexNow. |
-| `AI_PROVIDER` | for generation | `anthropic` or `gemini`. Defaults to whichever key is set. |
+| `AI_PROVIDER` | for generation | `anthropic`, `gemini` or `groq`. Defaults to whichever key is set. |
+| `GROQ_API_KEY` / `GROQ_MODEL` | optional | Rate-limit fallback: a 429 from the primary provider that survives the retries re-runs that call on Groq (`llama-3.3-70b-versatile`). Unset = no fallback. The provider used is stored on the post (`aiProvider`) and in the run log. |
 | `AI_MODEL` | no | Model id for that provider (defaults `claude-opus-5` / `gemini-3.6-flash`). |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | for generation | Never commit or log them; `src/lib/ai.ts` redacts them from every error. Without a key, ingest still runs and generation stops with a clear error. |
 | `SCHEDULER_CRON` | no | Cron expression for `npm run scheduler` (default `0 9 * * *`). |
@@ -106,14 +107,14 @@ One run = CLAUDE.md steps 1–9:
 1. **Ingest** — fetch the RSS/Atom feeds from Settings → Feeds (default: the Windows Insider blog), validate with Zod, keep items from the last 14 days, derive keywords (KB, build, version, error code, feature) and queue new ones (max 20 per run, deduped by phrase). Identifiers are only ever copied from feed text.
 2. **Select** — `POSTS_PER_DAY` queued keywords, newest first, never more than two per category per day.
 3. **Assign** — random author whose `categoryFocus` matches, avoiding the previous post's author.
-4. **Research** — fetch up to 5 source pages (KB article → feed link → official references), extract text; for KB articles the Improvements and Known issues sections are pulled out and put first. No sources → no post.
+4. **Research** — fetch up to 5 source pages: the KB article for KB keywords; for evergreen keywords (no KB) the top 3 official Microsoft pages for the exact error code or feature name via the Microsoft Learn search API; the feed item; generic references only when nothing official was found. KB articles have their Improvements and Known issues sections pulled out and put first. No sources → no post.
 5. **Generate** — one schema-constrained call, then strict validation: per-category structure (release: Highlights ≥5 / Known issues / Should you install it / How to get it; fix: Method 1–3+ / If nothing worked; how-to: Steps / What it changes / Undo), 3–5 FAQ, meta lengths, no HTML, sentence-case titles.
 6. **Quality gate** — deterministic identifier check against the sources + a second scoring call (0–100).
 7. **Internal links** — suggestions matched to published posts by category and title similarity.
 8. **Featured image** — the branded `/api/og` card for the title.
 9. **Publish decision** — `AUTO_PUBLISH` off → `REVIEW`. On → `PUBLISHED` unless an identifier is unsupported by the sources or the score is below Setting `MIN_QUALITY_SCORE` (default 0), then revalidate + IndexNow.
 
-Entry points: `npm run generate`, `npm run scheduler`, the dashboard's "Run pipeline now", and `POST /api/cron/generate` (Bearer `CRON_SECRET`; open on localhost when the secret is unset). The last run's report is shown on the dashboard. The editor's "Regenerate section" button rewrites one H2 from the post's stored source URLs.
+Entry points: `npm run generate`, `npm run scheduler`, the dashboard's "Run pipeline now" (up to `POSTS_PER_DAY` in one go), and `POST /api/cron/generate` (Bearer `CRON_SECRET`), which Vercel fires at 03:30, 07:30 and 11:30 UTC for one post each. `POSTS_PER_DAY` is the daily cap shared by every run, alongside the two-per-category cap. The last run's report is shown on the dashboard. The editor's "Regenerate section" button rewrites one H2 from the post's stored source URLs.
 
 ## Operations
 

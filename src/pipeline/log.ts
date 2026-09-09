@@ -29,6 +29,8 @@ export type PostOutcome = {
   title: string | null;
   qualityScore: number | null;
   flaggedIdentifiers: string[];
+  /** "gemini/gemini-3.6-flash", "groq/llama-3.3-70b-versatile", … */
+  provider?: string;
   error: string | null;
 };
 

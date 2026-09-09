@@ -15,16 +15,24 @@ const OFFICIAL = {
   windowsSupport: "https://support.microsoft.com/en-us/windows",
 };
 
-/** Ordered, de-duplicated candidate URLs: KB articles → feed item → topic references. Pure. */
-export function buildSourceUrls(input: { phrase: string; link?: string | null; identifiers?: Identifiers; extra?: string[] }): string[] {
+/**
+ * Ordered, de-duplicated candidate URLs. KB articles first, then official pages found by search
+ * (evergreen keywords), then the feed item and any stored extras. The generic reference pages are
+ * only added when nothing official was found. Pure.
+ */
+export function buildSourceUrls(input: { phrase: string; link?: string | null; identifiers?: Identifiers; extra?: string[]; official?: string[] }): string[] {
   const ids = input.identifiers ?? extractIdentifiers(input.phrase);
   const urls: string[] = [];
   for (const kb of ids.kb) urls.push(`https://support.microsoft.com/help/${kb.replace(/^KB/i, "")}`);
+  for (const u of input.official ?? []) urls.push(u);
   if (input.link) urls.push(input.link);
   for (const u of input.extra ?? []) urls.push(u);
-  if (ids.errorCodes.length) urls.push(OFFICIAL.updateErrorReference);
-  urls.push(OFFICIAL.releaseHealth);
-  if (urls.length < 3) urls.push(OFFICIAL.windowsSupport);
+  const hasOfficial = ids.kb.length > 0 || (input.official?.length ?? 0) > 0;
+  if (!hasOfficial) {
+    if (ids.errorCodes.length) urls.push(OFFICIAL.updateErrorReference);
+    urls.push(OFFICIAL.releaseHealth);
+    if (urls.length < 3) urls.push(OFFICIAL.windowsSupport);
+  }
   return Array.from(new Set(urls.filter((u) => /^https?:\/\//.test(u)))).slice(0, MAX_SOURCES);
 }
 

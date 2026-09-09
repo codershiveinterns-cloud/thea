@@ -3,7 +3,7 @@
  * The API call is schema-constrained (loose shape); the result is then validated strictly.
  */
 import { z } from "zod";
-import { generateStructured, type AiUsage } from "@/lib/ai";
+import { generateStructured, type AiProvider, type AiUsage } from "@/lib/ai";
 import { FAQ_MAX, FAQ_MIN } from "@/lib/constants";
 import { STRUCTURE_SPECS, sentenceCase, structureFor, validateBodyStructure, type StructureKind } from "@/lib/post-structure";
 import { slugify } from "@/lib/slug";
@@ -86,9 +86,9 @@ export function buildUserPrompt(input: GenerationInput): string {
   ].join("\n\n");
 }
 
-export async function generatePost(input: GenerationInput): Promise<{ post: GeneratedPost; usage: AiUsage }> {
+export async function generatePost(input: GenerationInput): Promise<{ post: GeneratedPost; usage: AiUsage; provider: AiProvider; model: string }> {
   const kind = structureFor(input.categorySlug);
-  const { data, usage } = await generateStructured({
+  const { data, usage, provider, model } = await generateStructured({
     schema: generatedPostOutput,
     system: buildSystemPrompt(input.author, kind),
     user: buildUserPrompt(input),
@@ -101,7 +101,7 @@ export async function generatePost(input: GenerationInput): Promise<{ post: Gene
   const structure = validateBodyStructure(strict.data.body, kind);
   if (structure.length) throw new Error(`Generated post failed structure check (${kind}): ${structure.join(" ")}`);
   const post = { ...strict.data, title: sentenceCase(strict.data.title), metaTitle: sentenceCase(strict.data.metaTitle) };
-  return { post, usage };
+  return { post, usage, provider, model };
 }
 
 // ---------- Regenerate one H2 section (editor button) ----------

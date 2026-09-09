@@ -59,12 +59,14 @@ describe("pickAuthor", () => {
 });
 
 describe("buildSourceUrls", () => {
-  it("puts KB support articles first, then the feed link, then official references, max 5", () => {
+  it("puts the KB support article first, then the feed link, and skips generic references when a KB exists", () => {
     const urls = buildSourceUrls({ phrase: "KB5065426 not installing 0x800f0922", link: "https://x.test/a" });
     expect(urls[0]).toBe("https://support.microsoft.com/help/5065426");
     expect(urls[1]).toBe("https://x.test/a");
     expect(urls.length).toBeLessThanOrEqual(5);
-    expect(urls.some((u) => u.includes("windows-update-error-reference"))).toBe(true);
+    expect(urls.some((u) => u.includes("windows-update-error-reference"))).toBe(false);
+    const generic = buildSourceUrls({ phrase: "Windows 11 update stuck at 100 percent", link: "https://x.test/b" });
+    expect(generic.some((u) => u.includes("release-health/"))).toBe(true);
   });
 });
 

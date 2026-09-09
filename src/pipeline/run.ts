@@ -4,7 +4,8 @@
  */
 import { db } from "@/lib/db";
 import { CATEGORY_SLUGS, POSTS_PER_DAY_MAX, SETTING_KEYS, categoryBySlug, type CategorySlug } from "@/lib/constants";
-import { describeAi } from "@/lib/ai";
+import { describeAi, isFallbackConfigured } from "@/lib/ai";
+import { startOfToday } from "@/lib/dates";
 import { sendPipelineAlert } from "@/lib/alerts";
 import { pingIndexNow } from "@/lib/indexing";
 import { suggestRelatedPosts } from "@/lib/post-utils";
@@ -17,6 +18,7 @@ import { generatePost, type GeneratedPost } from "./generate";
 import { RunLog, type PipelineReport, type PostOutcome } from "./log";
 import { decidePublish, qualityGate } from "./quality";
 import { buildSourceUrls, research } from "./research";
+import { searchMicrosoft } from "./search";
 import { loadSelection, pickAuthor, type SelectableKeyword } from "./select";
 import { DEFAULT_FEED_URLS, fetchFeeds } from "./sources/feeds";
 
@@ -122,7 +124,7 @@ async function resolveInternalLinks(suggestions: string[], categoryId: string, l
 
 async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; autoPublish: boolean; minScore: number; dryRun: boolean; lastAuthorId: string | null; log: RunLog; usage: PipelineReport["usage"] }): Promise<PostOutcome & { authorId: string | null }> {
   const { log } = ctx;
-  const base: PostOutcome & { authorId: string | null } = { keywordId: kw.id, phrase: kw.phrase, categorySlug: kw.categorySlug, status: "FAILED", postId: null, title: null, qualityScore: null, flaggedIdentifiers: [], error: null, authorId: null };
+  const base: PostOutcome & { authorId: string | null } = { keywordId: kw.id, phrase: kw.phrase, categorySlug: kw.categorySlug, status: "FAILED", postId: null, title: null, qualityScore: null, flaggedIdentifiers: [], provider: undefined, error: null, authorId: null };
   const category = categoryBySlug(kw.categorySlug);
   if (!category) return { ...base, error: `Unknown category ${kw.categorySlug}` };
 
@@ -135,7 +137,10 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
 
   // 4. research
   const { link, identifiers } = feedLinkFor(kw.phrase, ctx.items);
-  const urls = buildSourceUrls({ phrase: kw.phrase, link, identifiers });
+  // Evergreen keywords (no KB number): find the official Microsoft pages for the error code / feature first.
+  const official = identifiers.kb.length === 0 ? await searchMicrosoft(kw.phrase) : [];
+  if (identifiers.kb.length === 0) log.info("research", official.length ? `official pages: ${official.join(", ")}` : "no official page found by search — using generic references");
+  const urls = buildSourceUrls({ phrase: kw.phrase, link, identifiers, official });
   const res = await research(urls);
   for (const s of res.sources) log[s.ok ? "info" : "warn"]("research", `${s.url}: ${s.ok ? `${s.text.length} chars` : s.error}`);
   if (res.urls.length === 0) return { ...base, error: "No source pages could be fetched — refusing to generate without facts" };
@@ -143,16 +148,19 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
   // 5. generate
   const existingTitles = (await db.post.findMany({ where: { status: "PUBLISHED" }, select: { title: true }, orderBy: { publishedAt: "desc" }, take: 40 })).map((p) => p.title);
   let post: GeneratedPost;
+  let provider = "";
   try {
     const g = await generatePost({ phrase: kw.phrase, categorySlug: kw.categorySlug, categoryName: category.name, author, sourcesText: res.combinedText, existingTitles });
     post = g.post;
+    provider = `${g.provider}/${g.model}`;
     ctx.usage.inputTokens += g.usage.inputTokens;
     ctx.usage.outputTokens += g.usage.outputTokens;
   } catch (err) {
     return { ...base, error: `Generation failed: ${(err as Error).message}` };
   }
   base.title = post.title;
-  log.info("generate", `"${post.title}" (${post.body.split(/\s+/).length} words, ${post.faq.length} FAQ)`);
+  base.provider = provider;
+  log.info("generate", `"${post.title}" (${post.body.split(/\s+/).length} words, ${post.faq.length} FAQ) via ${provider}`);
 
   // 6. quality gate
   let quality;
@@ -165,7 +173,7 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
   }
   base.qualityScore = quality.score;
   base.flaggedIdentifiers = quality.flaggedIdentifiers;
-  log[quality.passes ? "info" : "warn"]("quality", `score ${quality.score}${quality.flaggedIdentifiers.length ? `, unsupported identifiers: ${quality.flaggedIdentifiers.join(", ")}` : ""}`);
+  log[quality.passes ? "info" : "warn"]("quality", `score ${quality.score} via ${quality.provider}${quality.flaggedIdentifiers.length ? `, unsupported identifiers: ${quality.flaggedIdentifiers.join(", ")}` : ""}`);
 
   // 9. publish decision
   const status = decidePublish({ autoPublish: ctx.autoPublish, minScore: ctx.minScore, score: quality.score, flaggedIdentifiers: quality.flaggedIdentifiers });
@@ -198,6 +206,7 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
       qualityScore: quality.score,
       qualityNotes: quality.notes,
       generatedBy: "AI",
+      aiProvider: provider,
       publishedAt: status === "PUBLISHED" ? now : null,
       relatedPosts: { connect: relatedIds.map((id) => ({ id })) },
     },
@@ -226,7 +235,11 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
   const log = new RunLog(!opts.quiet);
   const startedAt = new Date().toISOString();
   const settings = await getAllSettings();
-  const perDay = Math.min(POSTS_PER_DAY_MAX, Math.max(1, opts.limit ?? settingInt(settings.POSTS_PER_DAY, 2)));
+  // POSTS_PER_DAY is a daily cap shared by every run today (the Vercel cron fires three times, one post each).
+  const cap = Math.min(POSTS_PER_DAY_MAX, Math.max(1, settingInt(settings.POSTS_PER_DAY, 2)));
+  const madeToday = opts.keywordId ? 0 : await db.post.count({ where: { generatedBy: "AI", createdAt: { gte: startOfToday() } } });
+  const remaining = Math.max(0, cap - madeToday);
+  const perDay = Math.min(remaining, opts.limit ?? cap);
   const autoPublish = settingBool(settings.AUTO_PUBLISH);
   const minScore = Math.max(0, Math.min(100, settingInt(settings.MIN_QUALITY_SCORE, 0)));
   const dryRun = Boolean(opts.dryRun);
@@ -235,14 +248,15 @@ export async function runPipeline(opts: RunOptions = {}): Promise<PipelineReport
   let ingestReport: PipelineReport["ingest"] = { feeds: [], newKeywords: 0 };
   let items: FeedItem[] = [];
 
-  log.info("run", `AI ${describeAi()} · posts per run ${perDay}, auto-publish ${autoPublish ? `on (min score ${minScore})` : "off"}${dryRun ? ", DRY RUN" : ""}`);
+  log.info("run", `AI ${describeAi()}${isFallbackConfigured() ? " (Groq fallback on 429)" : ""} · daily cap ${cap}, made today ${madeToday}, this run up to ${perDay}, auto-publish ${autoPublish ? `on (min score ${minScore})` : "off"}${dryRun ? ", DRY RUN" : ""}`);
   try {
     if (!opts.skipIngest) {
       const r = await ingest(feedUrlsFromSetting(settings.FEED_URLS), log, dryRun);
       ingestReport = { feeds: r.feeds, newKeywords: r.newKeywords };
       items = r.items;
     }
-    const selected = opts.ingestOnly ? [] : await loadSelection(perDay, opts.keywordId);
+    const selected = opts.ingestOnly || perDay === 0 ? [] : await loadSelection(perDay, opts.keywordId);
+    if (!opts.ingestOnly && perDay === 0) log.info("select", `daily cap of ${cap} already reached today — nothing generated`);
     if (!opts.ingestOnly) log.info("select", selected.length ? selected.map((k) => `"${k.phrase}" [${k.categorySlug}]`).join("; ") : "no queued keywords eligible");
     const last = await db.post.findFirst({ where: { generatedBy: "AI" }, orderBy: { createdAt: "desc" }, select: { authorId: true } });
     let lastAuthorId = last?.authorId ?? null;

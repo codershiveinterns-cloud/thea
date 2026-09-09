@@ -3,7 +3,7 @@
  * scoring accuracy vs sources, structure, thinness and hallucinated identifiers (0–100).
  */
 import { z } from "zod";
-import { generateStructured, type AiUsage } from "@/lib/ai";
+import { generateStructured, type AiProvider, type AiUsage } from "@/lib/ai";
 import { FAQ_MIN } from "@/lib/constants";
 import { validateBodyStructure, type StructureKind } from "@/lib/post-structure";
 import { identifiersNotInSources } from "./extract";
@@ -15,6 +15,7 @@ export type QualityResult = {
   flaggedIdentifiers: string[];
   passes: boolean;
   usage: AiUsage;
+  provider: AiProvider;
 };
 
 const qualityOutput = z.object({
@@ -49,7 +50,7 @@ export async function qualityGate(post: GeneratedPost, sourcesText: string, kind
   const text = postToText(post);
   const deterministic = identifiersNotInSources(text, sourcesText);
   const problems = structureProblems(post, kind);
-  const { data, usage } = await generateStructured({
+  const { data, usage, provider } = await generateStructured({
     schema: qualityOutput,
     effort: "medium",
     maxTokens: 4000,
@@ -60,5 +61,5 @@ export async function qualityGate(post: GeneratedPost, sourcesText: string, kind
   const score = Math.max(0, Math.min(100, Math.round(data.score)));
   const flagged = Array.from(new Set([...deterministic, ...data.hallucinatedIdentifiers.map((s) => s.trim()).filter(Boolean)]));
   const notes = [data.notes.trim(), problems.length ? `Structure: ${problems.join("; ")}` : "", flagged.length ? `Unsupported identifiers: ${flagged.join(", ")}` : ""].filter(Boolean).join("\n");
-  return { score, notes, flaggedIdentifiers: flagged, passes: flagged.length === 0, usage };
+  return { score, notes, flaggedIdentifiers: flagged, passes: flagged.length === 0, usage, provider };
 }

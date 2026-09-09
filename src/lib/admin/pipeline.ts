@@ -23,6 +23,7 @@ export async function runPipelineNow(): Promise<PipelineRunResult> {
     return { ok: false, message: "ANTHROPIC_API_KEY is not set in .env, so nothing was generated. Feeds were not fetched either.", createdPostIds: [] };
   }
   try {
+    // The admin button generates up to POSTS_PER_DAY in one go (the cron does one per call).
     const report = await runPipeline({ quiet: true });
     revalidatePath("/admin");
     revalidatePath("/admin/posts");

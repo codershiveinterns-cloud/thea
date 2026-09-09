@@ -17,7 +17,8 @@ Monetised later via self-managed display ad slots (no affiliate networks, no buy
 - The daily pipeline runs via `npm run generate`, the "Run pipeline now" button in
   /admin, and a local scheduler (`npm run scheduler` — node-cron, runs daily at
   09:00 local time, splitting POSTS_PER_DAY posts a few hours apart so they look natural).
-  When deployed, the same job moves to Vercel Cron hitting /api/cron/generate.
+  When deployed, Vercel Cron hits /api/cron/generate at 03:30, 07:30 and 11:30 UTC for one
+  post each; POSTS_PER_DAY is the daily cap.
 
 ## Go-live (phase 5, after local build works)
 - Deploy to Vercel, switch DATABASE_URL to Postgres (Supabase), connect the domain.
@@ -30,8 +31,9 @@ Monetised later via self-managed display ad slots (no affiliate networks, no buy
 - Next.js 15 App Router, TypeScript, Tailwind
 - SQLite via Prisma for local dev (schema must stay Postgres-compatible —
   no SQLite-only types; we will switch DATABASE_URL to Postgres/Supabase later)
-- AI generation: Anthropic API, key in .env as ANTHROPIC_API_KEY,
-  model name in ANTHROPIC_MODEL. Never hardcode keys.
+- AI generation: AI_PROVIDER = anthropic | gemini | groq with the matching *_API_KEY in .env,
+  model in AI_MODEL; GROQ_API_KEY optionally enables a Groq fallback when the primary provider
+  returns 429 after retries (recorded on Post.aiProvider). Never hardcode keys.
 - Images: next/image; OG images via @vercel/og at /api/og
 
 ## Content categories (slugs are fixed — used in URLs, sitemap, and pipeline)
@@ -86,8 +88,10 @@ Posts are assigned round-robin among authors whose categoryFocus matches.
    Spread across categories — never 3 posts in the same category on one day.
 3. Assign author: random pick among authors whose categoryFocus matches (no two consecutive
    posts by the same author).
-4. Research: fetch 3–5 source URLs (official docs first), extract plain text,
-   store in sourceUrls. The model may only state facts present in these sources.
+4. Research: fetch 3–5 source URLs (the KB article; for keywords without a KB, the top 3
+   official learn/support.microsoft.com pages for the error code or feature via search;
+   generic references only if nothing official is found), extract plain text, store in
+   sourceUrls. The model may only state facts present in these sources.
 5. Generate: Anthropic API call. System prompt = post structure above + author.stylePrompt.
    Output strict JSON: {title, slug, quickAnswer, body, affectedBuilds, faq,
    metaTitle, metaDescription, internalLinkSuggestions}. Strip fences, parse, validate.

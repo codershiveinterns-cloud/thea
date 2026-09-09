@@ -45,7 +45,7 @@ export async function refreshPostFromSources(postId: string): Promise<RefreshRes
   if (sources.urls.length === 0) throw new Error("No source pages could be fetched — refusing to regenerate without facts");
 
   const existingTitles = (await db.post.findMany({ where: { status: "PUBLISHED", NOT: { id: postId } }, select: { title: true }, orderBy: { publishedAt: "desc" }, take: 40 })).map((p) => p.title);
-  const { post: generated } = await generatePost({
+  const { post: generated, provider, model } = await generatePost({
     phrase: post.title,
     categorySlug: post.category.slug,
     categoryName: post.category.name,
@@ -67,6 +67,7 @@ export async function refreshPostFromSources(postId: string): Promise<RefreshRes
       qualityScore: quality.score,
       qualityNotes: `Refreshed ${new Date().toISOString().slice(0, 10)} against fresh sources.\n${quality.notes}`,
       generatedBy: "AI",
+      aiProvider: `${provider}/${model}`,
     },
   });
   return { postId, score: quality.score, sourceCount: sources.urls.length, flaggedIdentifiers: quality.flaggedIdentifiers };
