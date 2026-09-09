@@ -13,8 +13,8 @@ export default async function PrivacyPolicyPage() {
     <LegalPage slug="privacy-policy" intro={`This policy explains what ${LEGAL.entity} collects when you read the site, why, who it is shared with, and the rights you have wherever you live.`}>
       <h2>Who we are</h2>
       <p>
-        {LEGAL.entity} is a Windows how-to publication operated from {LEGAL.governingLaw} with readers worldwide. For anything in this policy, write to{" "}
-        <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. We are the data controller (GDPR), the business (CCPA/CPRA) and the data fiduciary (DPDP
+        {LEGAL.entity} is a Windows how-to publication operated from {LEGAL.governingLaw} with readers worldwide. For anything in this policy, use the{" "}
+        <Link href="/contact">contact page</Link>. We are the data controller (GDPR), the business (CCPA/CPRA) and the data fiduciary (DPDP
         Act) for the processing described here.
       </p>
 
@@ -57,7 +57,7 @@ export default async function PrivacyPolicyPage() {
         )}
       </p>
       <p>
-        <strong>Contact.</strong> If you email us at <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>, we keep your message and address for as long
+        <strong>Contact.</strong> If you write to us through the <Link href="/contact">contact page</Link>, we keep your message and address for as long
         as needed to answer it and to keep a record of corrections we made because of it. We do not add you to any list.
       </p>
       <p>
@@ -120,12 +120,11 @@ export default async function PrivacyPolicyPage() {
         resolve it, you may approach the Data Protection Board of India.
       </p>
       <p>
-        <strong>Everyone else.</strong> We honour the same requests regardless of where you are. Email <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>{" "}
-        with &ldquo;Privacy request&rdquo; in the subject; we reply within 30 days and may ask you to confirm the address the request concerns.
+        <strong>Everyone else.</strong> We honour the same requests regardless of where you are. Send a &ldquo;Privacy request&rdquo; through the <Link href="/contact">contact page</Link>; we reply within 30 days and may ask you to confirm the address the request concerns.
       </p>
 
       <h2>Children</h2>
-      <p>The site is written for adults managing their own PCs. We do not knowingly collect personal data from children under 16 (under 18 in India). If you believe a child has sent us data, email us and we will delete it.</p>
+      <p>The site is written for adults managing their own PCs. We do not knowingly collect personal data from children under 16 (under 18 in India). If you believe a child has sent us data, tell us via the <Link href="/contact">contact page</Link> and we will delete it.</p>
 
       <h2>Security</h2>
       <p>The site is served over HTTPS only. Access to our systems is limited to the people who run the publication and protected by credentials that are never stored in the code.</p>

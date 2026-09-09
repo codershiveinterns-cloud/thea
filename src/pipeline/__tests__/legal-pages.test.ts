@@ -17,7 +17,7 @@ describe("legal pages: registry", () => {
   it("defines all six pages with hard-coded entity, contact and law", () => {
     expect(LEGAL_PAGES.map((p) => p.slug)).toEqual(["privacy-policy", "terms", "cookie-policy", "disclaimer", "advertising-disclosure", "copyright"]);
     expect(LEGAL.entity).toBe("Thea");
-    expect(LEGAL.email).toBe("codershiveinterns@gmail.com");
+    expect("email" in LEGAL).toBe(false);
     expect(LEGAL.governingLaw).toBe("India");
     expect(LEGAL.updated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(formatLegalDate("2026-09-09")).toBe("9 September 2026");
@@ -41,7 +41,8 @@ describe("legal pages: HTTP", async () => {
       expect(html).toContain(`<title>${page.title}`);
       expect(html).toMatch(/<meta name="robots" content="index, follow"/);
       expect(html).toContain(formatLegalDate());
-      expect(html).toContain(LEGAL.email);
+      expect(html).toContain('href="/contact"');
+      expect(html).not.toMatch(/mailto:|codershiveinterns/);
     });
   }
   it.skipIf(!up)("sitemap lists every legal page and the footer links them", async () => {

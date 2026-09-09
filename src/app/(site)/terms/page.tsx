@@ -41,7 +41,7 @@ export default function TermsPage() {
       <h2>Acceptable use</h2>
       <ul>
         <li>You may read, link to and quote short excerpts of our articles with attribution and a link.</li>
-        <li>You may not scrape, crawl for republication, mirror, or bulk-download the site, or republish articles in full, without written permission from <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.</li>
+        <li>You may not scrape, crawl for republication, mirror, or bulk-download the site, or republish articles in full, without written permission requested through the <Link href="/contact">contact page</Link>.</li>
         <li>You may not use the content to train, fine-tune or evaluate machine-learning models without permission.</li>
         <li>You may not interfere with the site, probe it for vulnerabilities without authorisation, or use it to distribute malware or spam.</li>
       </ul>
@@ -63,7 +63,7 @@ export default function TermsPage() {
       </p>
 
       <h2>Contact</h2>
-      <p>Questions about these terms: <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.</p>
+      <p>Questions about these terms: use the <Link href="/contact">contact page</Link>.</p>
     </LegalPage>
   );
 }

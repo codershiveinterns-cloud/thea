@@ -42,7 +42,7 @@ export default function DisclaimerPage() {
 
       <h2>Errors and corrections</h2>
       <p>
-        If a step is wrong or no longer works, tell us at <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a> with the Windows build, the KB number
+        If a step is wrong or no longer works, tell us through the <Link href="/contact">contact page</Link> with the Windows build, the KB number
         and the exact error text. We correct articles and show the updated date on the page.
       </p>
 

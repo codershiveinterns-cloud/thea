@@ -43,7 +43,7 @@ export default async function AdvertisingDisclosurePage() {
       </p>
 
       <h2>Advertise or ask a question</h2>
-      <p>Write to <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.</p>
+      <p>Use the <Link href="/contact">contact page</Link>.</p>
     </LegalPage>
   );
 }

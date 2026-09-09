@@ -5,7 +5,6 @@
 
 export const LEGAL = {
   entity: "Thea",
-  email: "codershiveinterns@gmail.com",
   governingLaw: "India",
   /** Shown as "Last updated" on every legal page. Bump when any legal page changes. */
   updated: "2026-09-09",

@@ -27,19 +27,19 @@ export default function CopyrightPage() {
       <h2>What needs permission</h2>
       <p>
         Republishing an article in full or in substantial part, translating it, mirroring the site, scraping it for redistribution, or using the
-        content to train machine-learning models. Ask at <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>; we usually say yes to non-commercial
+        content to train machine-learning models. Ask through the <Link href="/contact">contact page</Link>; we usually say yes to non-commercial
         reuse with credit.
       </p>
 
       <h2>Reporting copyright infringement (DMCA and equivalent notices)</h2>
       <p>
-        If you believe something on {LEGAL.entity} infringes your copyright, email <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a> with
-        &ldquo;Copyright notice&rdquo; in the subject and include:
+        If you believe something on {LEGAL.entity} infringes your copyright, send a notice through the <Link href="/contact">contact page</Link> with
+        &ldquo;Copyright notice&rdquo; as the subject and include:
       </p>
       <ol>
         <li>The work you own and where it can be seen.</li>
         <li>The exact URL on {LEGAL.entity} where you believe it is used, and which part.</li>
-        <li>Your name, organisation if any, and an email address we can reply to.</li>
+        <li>Your name, organisation if any, and a way for us to reply to you.</li>
         <li>A statement that you believe in good faith the use is not authorised by the copyright owner, its agent or the law.</li>
         <li>A statement, under penalty of perjury where that applies, that the information is accurate and that you are the owner or authorised to act for the owner.</li>
         <li>Your physical or electronic signature.</li>

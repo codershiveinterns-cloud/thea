@@ -24,8 +24,8 @@ export function LegalPage({ slug, intro, children }: { slug: LegalSlug; intro?: 
       ]}
     >
       <p className="!mt-0 text-sm text-fg-muted">
-        Last updated <time dateTime={LEGAL.updated}>{formatLegalDate()}</time> · Operated by {LEGAL.entity} · Contact:{" "}
-        <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>
+        Last updated <time dateTime={LEGAL.updated}>{formatLegalDate()}</time> · Operated by {LEGAL.entity} · Questions: use the{" "}
+        <Link href="/contact">contact page</Link>
       </p>
       {children}
       <h2>Related policies</h2>

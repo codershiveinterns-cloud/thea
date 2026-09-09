@@ -71,7 +71,7 @@ export default async function CookiePolicyPage() {
 
       <h2>Questions</h2>
       <p>
-        Email <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. The <Link href="/privacy-policy">privacy policy</Link> explains the data behind each
+        Use the <Link href="/contact">contact page</Link>. The <Link href="/privacy-policy">privacy policy</Link> explains the data behind each
         of these services.
       </p>
     </LegalPage>
