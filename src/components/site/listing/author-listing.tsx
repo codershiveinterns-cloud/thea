@@ -109,8 +109,8 @@ export function AuthorListing({ author, page, items, total }: Props) {
 
       {items.length === 0 ? (
         <EmptyState title={`${author.name} has no published guides yet`} className="mt-12">
-          Guides appear here as soon as they are published. Every guide is checked against its sources first and is marked
-          &ldquo;Verified: pending&rdquo; until an editor has tested it on a real build.
+          Guides appear here as soon as they are published. Every guide is checked against Microsoft&apos;s release notes before it goes
+          live and re-checked when a new build ships.
         </EmptyState>
       ) : (
         <section aria-labelledby="author-posts-heading" className="mt-12">

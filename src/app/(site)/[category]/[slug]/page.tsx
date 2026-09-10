@@ -170,7 +170,7 @@ export default async function PostPage({ params }: Props) {
           <SourcesLine urls={sourceUrls} />
           <Faq items={faq} />
 
-          <VerificationLine testedOnBuild={post.testedOnBuild} lastVerifiedAt={post.lastVerifiedAt} authorName={post.author.name} />
+          <VerificationLine publishedAt={post.publishedAt} updatedAt={post.updatedAt} testedOnBuild={post.testedOnBuild} />
           <AuthorCard author={post.author} />
         </article>
       </div>

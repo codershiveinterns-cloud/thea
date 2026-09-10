@@ -92,7 +92,7 @@ export function validateForPublish(post: PublishablePost, categorySlug = "error-
 
   if (readStringArray(post.affectedBuilds).length === 0) warnings.push("No affected builds listed.");
   if (readStringArray(post.screenshots).length === 0) warnings.push("No screenshots uploaded yet — add real ones after verifying.");
-  if (!post.testedOnBuild) warnings.push('"Tested on" build is empty — the post will show "Verified: pending".');
+  if (!post.testedOnBuild) warnings.push('"Tested on" build is empty — the public page will not name a tested build until you add one.');
   if ((post.relatedPosts?.length ?? 0) < RELATED_POSTS_MIN) {
     warnings.push(`Fewer than ${RELATED_POSTS_MIN} related posts linked.`);
   }

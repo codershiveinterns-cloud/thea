@@ -34,6 +34,7 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `npm run db:studio` | Prisma Studio |
 | `npm run generate` | Run the content pipeline once. Flags: `-- --dry-run`, `-- --limit 1`, `-- --skip-ingest`, `-- --keyword "phrase" --category error-codes`, `-- --list-refresh` |
 | `npm run backfill -- --months 6` | One-time: queue every KB from the last N months of the Windows 11 update history (`--dry-run` to list) |
+| `npm run refresh-review` | Regenerate every post in REVIEW with the current pipeline and publish the ones that pass (`--dry-run`, `--id <postId>`) |
 | `npm run scheduler` | Local daily scheduler (node-cron, 09:00 local; `-- --now` runs today's batch immediately) |
 | `npm test` | Vitest: feed parser, identifier extraction, generated-post validator, quality-gate decision, selection |
 

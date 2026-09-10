@@ -37,9 +37,8 @@ export default function EditorialPolicyPage() {
 
       <h2>Verification</h2>
       <p>
-        Every fix article carries a <strong>Tested on</strong> line naming the Windows build the steps were run on, and a last-verified
-        date. If the hands-on test has not happened yet, the article shows <strong>Verified: pending</strong> instead of a build, so you can
-        see at a glance whether the steps have been confirmed.
+        Every article carries a line saying it was checked against Microsoft&apos;s release notes on its publication date and is re-checked
+        when a new build ships. When an editor has also run the steps on a real PC, the same line names the build it was tested on.
       </p>
       <p>
         When Microsoft ships a new build, articles that cover affected updates, features or errors are re-checked. A method that no longer
@@ -55,7 +54,7 @@ export default function EditorialPolicyPage() {
       <p>
         A human editor reviews each article against its sources and tests the steps on a real PC — usually before it is published.
         Articles that pass the automated check can be published automatically so that same-day coverage is available quickly; the hands-on
-        check then follows, and the article shows <strong>Verified: pending</strong> until it has happened.
+        check then follows, and once it has happened the article names the build it was tested on.
       </p>
       <p>The byline on an article names the editor responsible for it — the person who checks its sources and runs the steps.</p>
 
@@ -87,12 +86,12 @@ export default function EditorialPolicyPage() {
         changes the interface, screenshots are retaken as part of re-verification.
       </p>
       <p>
-        An article that is still <strong>Verified: pending</strong> may show a branded cover image until its screenshots are added.
+        An article whose hands-on check has not happened yet may show a branded cover image until its screenshots are added.
       </p>
       <h2>Disclaimer</h2>
       <p>
-        {SITE.name} is not affiliated with Microsoft, guides are informational and followed at your own risk, and articles carry a
-        &ldquo;Verified: pending&rdquo; badge until a hands-on check is done. The full <Link href="/disclaimer">disclaimer</Link> explains each point.
+        {SITE.name} is not affiliated with Microsoft, guides are informational and followed at your own risk, and every article states the
+        date it was checked against Microsoft&apos;s release notes. The full <Link href="/disclaimer">disclaimer</Link> explains each point.
       </p>
     </StaticPage>
   );

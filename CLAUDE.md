@@ -57,7 +57,7 @@ Later (do NOT build yet): macos, ios, android.
   - how-to: Steps (numbered) · What it changes · Undo
 - "Sources" line above the FAQ linking the Microsoft page(s) the post was generated from
 - FAQ (3–5 Q&As, also emitted as FAQPage schema)
-- Last-verified date + author + "Tested on: [build]" line
+- Provenance line: checked against Microsoft's release notes on the publish date, plus "Tested on build X." when set
 - Internal links to 3–5 related posts (auto-suggested, editor confirms)
 
 ## Authors
@@ -103,7 +103,8 @@ Posts are assigned round-robin among authors whose categoryFocus matches.
    - AUTO_PUBLISH=false → status REVIEW; human publishes from /admin.
    - AUTO_PUBLISH=true  → PUBLISHED immediately (publishedAt = now, sitemap updated,
      IndexNow ping) unless the identifier check fails or score < Setting MIN_QUALITY_SCORE
-     (default 0 = no floor) → REVIEW. Post shows "Verified: pending" until a human sets testedOnBuild.
+     (default 0 = no floor) → REVIEW. Public pages show "Checked against Microsoft's release notes on
+     <date>; re-checked when a new build ships." plus "Tested on build X." once testedOnBuild is set.
    Every auto-published post is listed in the admin "Published today — verify" queue.
 
 ## Hard rules

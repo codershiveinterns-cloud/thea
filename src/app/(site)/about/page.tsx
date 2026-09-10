@@ -87,9 +87,8 @@ export default async function AboutPage() {
       <p>
         A human editor reviews each article against its sources and tests the steps on a real PC — usually before it is published.
         Articles that pass the automated check can be published automatically so that same-day coverage is available quickly; the hands-on
-        check then follows. Until it has happened, the article shows <strong>Verified: pending</strong> instead of a build number — treat
-        it as a starting point and check back. Once checked, the article shows the build it was tested on and the date it was last
-        verified.
+        check then follows. Every article states the date it was checked against Microsoft&apos;s release notes; once an editor has run
+        the steps on a real PC, it also names the build it was tested on.
       </p>
       <p>
         When Microsoft ships a new build, affected articles are re-checked and the verified date is updated. The full process, including

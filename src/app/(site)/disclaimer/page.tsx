@@ -35,9 +35,9 @@ export default function DisclaimerPage() {
       <p>
         Articles are AI-assisted: a first draft is generated from Microsoft&apos;s official documentation and release notes and then checked
         against those sources for accuracy, structure and invented identifiers. KB numbers, build numbers and error codes are only ever taken from
-        Microsoft&apos;s own pages, which every article links to. An article shows a <strong>&ldquo;Verified: pending&rdquo;</strong> badge until a
-        person has completed a hands-on check on a current build; once that happens the article shows the build it was tested on and the date. How
-        this works in detail is on the <Link href="/editorial-policy">editorial policy</Link> page.
+        Microsoft&apos;s own pages, which every article links to. Each article states the date it was checked against Microsoft&apos;s release
+        notes and is re-checked when a new build ships; where a person has also run the steps on a real PC, the article names the build it was
+        tested on. How this works in detail is on the <Link href="/editorial-policy">editorial policy</Link> page.
       </p>
 
       <h2>Errors and corrections</h2>

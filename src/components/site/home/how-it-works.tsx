@@ -3,7 +3,7 @@ import { SITE } from "@/lib/constants";
 
 const POINTS = [
   { title: "Same-day coverage", body: "What changed and what broke, on the day Microsoft ships it." },
-  { title: "Checked against Microsoft’s release notes", body: "Hands-on verification added when available: each guide shows the build it was tested on, or “Verified: pending” until then." },
+  { title: "Checked against Microsoft’s release notes", body: "Every guide states the date it was checked and is re-checked when a new build ships; hands-on verification, with the build it was tested on, is added when available." },
   { title: "No invented identifiers", body: "KB numbers, build numbers and error codes only ever come from Microsoft’s own pages, which every article links to." },
 ];
 

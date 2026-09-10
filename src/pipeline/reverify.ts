@@ -10,6 +10,8 @@ import { generatePost } from "./generate";
 import { qualityGate } from "./quality";
 import { structureFor } from "@/lib/post-structure";
 import { buildSourceUrls, research } from "./research";
+import { searchMicrosoft } from "./search";
+import { extractIdentifiers } from "./extract";
 
 export function reverifyCutoff(now = new Date(), days = REVERIFY_AFTER_DAYS): Date {
   return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
@@ -29,18 +31,20 @@ export async function listDueForReverification(take = 20, now = new Date()) {
   });
 }
 
-export type RefreshResult = { postId: string; score: number; sourceCount: number; flaggedIdentifiers: string[] };
+export type RefreshResult = { postId: string; score: number; sourceCount: number; flaggedIdentifiers: string[]; provider: string };
 
 /**
  * Regenerate body, quick answer, FAQ and affected builds from freshly fetched sources.
  * Title, slug, meta title/description, screenshots and author are kept. Status → REVIEW.
  */
-export async function refreshPostFromSources(postId: string): Promise<RefreshResult> {
+export async function refreshPostFromSources(postId: string, opts: { dryRun?: boolean } = {}): Promise<RefreshResult> {
   const post = await db.post.findUnique({ where: { id: postId }, include: { author: true, category: true } });
   if (!post) throw new Error("Post not found");
 
   const stored = readStringArray(post.sourceUrls);
-  const urls = buildSourceUrls({ phrase: post.title, extra: stored });
+  // Same research as a fresh run: KB article first; evergreen titles get the official pages found by search.
+  const official = extractIdentifiers(post.title).kb.length === 0 ? await searchMicrosoft(post.title) : [];
+  const urls = buildSourceUrls({ phrase: post.title, extra: stored, official });
   const sources = await research(urls);
   if (sources.urls.length === 0) throw new Error("No source pages could be fetched — refusing to regenerate without facts");
 
@@ -54,6 +58,8 @@ export async function refreshPostFromSources(postId: string): Promise<RefreshRes
     existingTitles,
   });
   const quality = await qualityGate(generated, sources.combinedText, structureFor(post.category.slug));
+  const providerLabel = `${provider}/${model}`;
+  if (opts.dryRun) return { postId, score: quality.score, sourceCount: sources.urls.length, flaggedIdentifiers: quality.flaggedIdentifiers, provider: providerLabel };
 
   await db.post.update({
     where: { id: postId },
@@ -67,8 +73,8 @@ export async function refreshPostFromSources(postId: string): Promise<RefreshRes
       qualityScore: quality.score,
       qualityNotes: `Refreshed ${new Date().toISOString().slice(0, 10)} against fresh sources.\n${quality.notes}`,
       generatedBy: "AI",
-      aiProvider: `${provider}/${model}`,
+      aiProvider: providerLabel,
     },
   });
-  return { postId, score: quality.score, sourceCount: sources.urls.length, flaggedIdentifiers: quality.flaggedIdentifiers };
+  return { postId, score: quality.score, sourceCount: sources.urls.length, flaggedIdentifiers: quality.flaggedIdentifiers, provider: providerLabel };
 }
