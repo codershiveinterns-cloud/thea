@@ -40,10 +40,14 @@ describe("keywordsFromItem", () => {
     const k = keywordsFromItem({ ...base, source: "insider", title: "Improving File Explorer & Context Menu: faster, simpler, and more customizable" });
     expect(k).toEqual([expect.objectContaining({ phrase: "Improving File Explorer & Context Menu", categorySlug: "how-to" })]);
   });
-  it("turns an update-history KB into a release + a problems keyword", () => {
+  it("turns a routine update-history KB into a windows-updates keyword only (no speculative 'not installing' post)", () => {
     const k = keywordsFromItem({ ...base, source: "update-history", title: "September 9, 2025—KB5065426 (OS Build 26100.6584)" });
-    expect(k.map((x) => x.categorySlug)).toEqual(["windows-updates", "update-problems"]);
+    expect(k.map((x) => x.categorySlug)).toEqual(["windows-updates"]);
     expect(k[0].phrase).toContain("KB5065426");
+  });
+  it("adds a 'not installing' problems keyword only when the entry's own text signals a real issue", () => {
+    const k = keywordsFromItem({ ...base, source: "update-history", title: "September 9, 2025—KB5065426 (OS Build 26100.6584)", summary: "Known issue: this update may fail to install on some devices." });
+    expect(k.map((x) => x.categorySlug)).toEqual(["windows-updates", "update-problems"]);
     expect(k[1].phrase).toBe("KB5065426 not installing or stuck in Windows 11");
   });
   it("adds an error-code keyword per code, never inventing one", () => {

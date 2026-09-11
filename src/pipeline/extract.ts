@@ -86,7 +86,13 @@ export function keywordsFromItem(item: FeedItem): KeywordCandidate[] {
     push(`What's new in Windows 11 ${version}`, "windows-updates");
   } else if (kb) {
     push(`What's new in ${kb}${build ? ` (Windows 11 build ${build})` : version ? ` for Windows 11 ${version}` : ""}`, "windows-updates");
-    push(`${kb} not installing or stuck in Windows 11`, "update-problems");
+    // Only queue a "not installing" post when the update-history entry's own text signals a real
+    // problem (e.g. "known issue", "may fail"). Every routine KB used to get this speculative post
+    // even when Microsoft reported no install issues — near-duplicate content across releases that
+    // never had a problem. Genuine known issues are still captured below from release-health text.
+    if (PROBLEM_WORDS.test(text)) {
+      push(`${kb} not installing or stuck in Windows 11`, "update-problems");
+    }
   } else if (item.source === "release-health" || PROBLEM_WORDS.test(item.title)) {
     push(cleanTitle(item.title).slice(0, 140), "update-problems");
   } else if (item.source === "update-history" && version) {
