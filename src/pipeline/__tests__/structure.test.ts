@@ -85,6 +85,10 @@ describe("sentenceCase", () => {
     expect(sentenceCase("Outlook not opening after a Windows update: 5 fixes that work")).toBe("Outlook not opening after a Windows update: 5 fixes that work");
     expect(sentenceCase("how to disable Copilot in Windows 11")).toBe("How to disable Copilot in Windows 11");
   });
+  it("keeps month names capitalised in dated titles (regression: 'September' was lower-cased)", () => {
+    expect(sentenceCase("What's New In Windows 11 Insider Builds (8 September 2026)")).toBe("What's new in Windows 11 Insider builds (8 September 2026)");
+    expect(sentenceCase("Fix KB5124012 Not Installing In March 2026")).toBe("Fix KB5124012 not installing in March 2026");
+  });
 });
 
 describe("extractKbSections", () => {

@@ -168,6 +168,9 @@ const KEEP_WORDS = new Set(
     "Windows", "Microsoft", "Copilot", "Insider", "Explorer", "Edge", "Outlook", "Teams", "OneDrive", "Defender", "Xbox", "PowerShell",
     "Office", "Excel", "PowerPoint", "OneNote", "Google", "Chrome", "Intel", "AMD", "Nvidia", "Bluetooth", "Wi-Fi", "Notepad", "Android",
     "iPhone", "Mac", "Linux", "Surface", "Arm", "Azure", "Entra", "Intune", "Hyper-V", "BitLocker", "Recall", "Snipping",
+    // Month names are proper nouns and must stay capitalised regardless of title-case position
+    // (dated titles like "Insider builds (8 September 2026)" were being lower-cased to "september").
+    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
   ].map((w) => w.toLowerCase()),
 );
 /** Words that stay capitalised only when they follow a product name (Windows Update, Microsoft Store, Windows Hello…). */
