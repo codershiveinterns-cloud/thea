@@ -11,6 +11,7 @@ import { pingIndexNow } from "@/lib/indexing";
 import { suggestRelatedPosts } from "@/lib/post-utils";
 import { ogImagePath } from "@/lib/seo";
 import { structureFor } from "@/lib/post-structure";
+import { generateIllustrationsForPost } from "@/lib/illustrations";
 import { getAllSettings, settingBool, settingInt } from "@/lib/settings";
 import { slugify } from "@/lib/slug";
 import { extractIdentifiers, keywordsFromItem, type FeedItem, type Identifiers } from "./extract";
@@ -183,10 +184,20 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
     return { ...base, status: "DRY_RUN" };
   }
 
-  // 7. internal links, 8. featured image, create
+  // 7. internal links, 8. featured image (a generated Windows Settings illustration, falling
+  // back to the branded OG card if illustration generation fails for any reason), create
   const relatedIds = await resolveInternalLinks(post.internalLinkSuggestions, kw.categoryId);
   const slug = await uniqueSlug(post.slug || post.title);
   const now = new Date();
+  let featuredImage = ogImagePath(post.title, kw.categorySlug);
+  let body = post.body;
+  try {
+    const illustrated = await generateIllustrationsForPost({ title: post.title, body: post.body, slug });
+    featuredImage = illustrated.featuredImage;
+    body = illustrated.body;
+  } catch (err) {
+    log.warn("illustrate", `falling back to the branded OG card: ${(err as Error).message}`);
+  }
   const created = await db.post.create({
     data: {
       title: post.title,
@@ -195,12 +206,12 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
       authorId: author.id,
       status,
       quickAnswer: post.quickAnswer,
-      body: post.body,
+      body,
       affectedBuilds: post.affectedBuilds,
       faq: post.faq,
       metaTitle: post.metaTitle,
       metaDescription: post.metaDescription,
-      featuredImage: ogImagePath(post.title, kw.categorySlug),
+      featuredImage,
       screenshots: [],
       sourceUrls: res.urls,
       qualityScore: quality.score,

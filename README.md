@@ -34,6 +34,7 @@ npm run dev            # http://localhost:3000  (admin at /admin)
 | `npm run db:studio` | Prisma Studio |
 | `npm run generate` | Run the content pipeline once. Flags: `-- --dry-run`, `-- --limit 1`, `-- --skip-ingest`, `-- --keyword "phrase" --category error-codes`, `-- --list-refresh` |
 | `npm run backfill -- --months 6` | One-time: queue every KB from the last N months of the Windows 11 update history (`--dry-run` to list) |
+| `npm run backfill-illustrations` | One-time: add the Windows 11 Settings illustration set to every published post that doesn't have one yet (`--dry-run`, `--limit N`, `--id <postId>`, `--force`) |
 | `npm run refresh-review` | Regenerate every post in REVIEW with the current pipeline and publish the ones that pass (`--dry-run`, `--id <postId>`) |
 | `npm run scheduler` | Local daily scheduler (node-cron, 09:00 local; `-- --now` runs today's batch immediately) |
 | `npm test` | Vitest: feed parser, identifier extraction, generated-post validator, quality-gate decision, selection |
@@ -114,7 +115,7 @@ One run = CLAUDE.md steps 1–9:
 5. **Generate** — one schema-constrained call, then strict validation: per-category structure (release: Highlights ≥5 / Known issues / Should you install it / How to get it; fix: Method 1–3+ / If nothing worked; how-to: Steps / What it changes / Undo), 3–5 FAQ, meta lengths, no HTML, sentence-case titles.
 6. **Quality gate** — deterministic identifier check against the sources + a second scoring call (0–100).
 7. **Internal links** — suggestions matched to published posts by category and title similarity.
-8. **Featured image** — the branded `/api/og` card for the title.
+8. **Illustrations** — a Windows 11 Settings-screen illustration for the specific screen each Method/Steps section references (`src/lib/illustrations`): hand-built SVG, rasterised with sharp, never a real screenshot. One becomes the 1200x630 featured/OG image; up to two more are embedded inline, each captioned "Illustration: …" (never "Screenshot"). Falls back to the branded `/api/og` card if generation fails.
 9. **Publish decision** — `AUTO_PUBLISH` off → `REVIEW`. On → `PUBLISHED` unless an identifier is unsupported by the sources or the score is below Setting `MIN_QUALITY_SCORE` (default 0), then revalidate + IndexNow.
 
 Entry points: `npm run generate`, `npm run scheduler`, the dashboard's "Run pipeline now" (up to `POSTS_PER_DAY` in one go), and `POST /api/cron/generate` (Bearer `CRON_SECRET`), which Vercel fires at 03:30, 07:30 and 11:30 UTC for one post each. `POSTS_PER_DAY` is the daily cap shared by every run, alongside the two-per-category cap. The last run's report is shown on the dashboard. The editor's "Regenerate section" button rewrites one H2 from the post's stored source URLs.

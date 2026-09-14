@@ -13,13 +13,14 @@
     "db:seed:minimal": "SEED_MINIMAL=1 prisma db seed",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-        "postinstall": "prisma generate",
+    "postinstall": "prisma generate",
     "generate": "tsx src/pipeline/cli.ts",
     "scheduler": "tsx src/pipeline/scheduler.ts",
     "backfill": "tsx src/pipeline/backfill.ts",
     "refresh-review": "tsx src/pipeline/refresh-review.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "backfill-illustrations": "tsx src/pipeline/backfill-illustrations.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
@@ -32,6 +33,7 @@
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "sharp": "^0.35.4",
     "zod": "^4.5.4"
   },
   "devDependencies": {

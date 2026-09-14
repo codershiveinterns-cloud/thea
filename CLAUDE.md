@@ -80,6 +80,8 @@ Posts are assigned round-robin among authors whose categoryFocus matches.
 ## Pipeline (src/pipeline)
 0. Backfill (one-time): `npm run backfill -- --months 6` queues every KB from the last N
    months of the Windows 11 update history.
+0b. Backfill (one-time): `npm run backfill-illustrations` adds the illustration set to every
+    already-PUBLISHED post that doesn't have one yet.
 1. Ingest: fetch Microsoft release-health / Windows update history RSS + Windows
    Insider blog RSS. Extract KB numbers, build numbers, error codes, feature names.
    Validate with Zod. Insert new Keyword rows (dedupe by phrase).
@@ -98,7 +100,11 @@ Posts are assigned round-robin among authors whose categoryFocus matches.
 6. Quality gate: second API call scoring 0–100 (accuracy vs sources, structure,
    thinness, hallucinated identifiers). Store score + notes.
 7. Internal links: match suggestions to existing posts by category + title similarity.
-8. Featured image: auto-generate a 1200x630 branded image via /api/og with the title.
+8. Illustrations: generate a Windows 11 Settings-screen illustration (SVG, hand-built Fluent-
+   style approximation, never a real screenshot) for the specific screen each Method/Steps
+   section references; one becomes the 1200x630 featured/OG image, up to two more are
+   embedded inline captioned "Illustration: …" (never "Screenshot"). Falls back to the
+   branded /api/og card if illustration generation fails.
 9. Publish decision (Setting AUTO_PUBLISH, default false):
    - AUTO_PUBLISH=false → status REVIEW; human publishes from /admin.
    - AUTO_PUBLISH=true  → PUBLISHED immediately (publishedAt = now, sitemap updated,
