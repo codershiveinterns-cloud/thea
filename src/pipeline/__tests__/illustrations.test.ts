@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
+import sharp from "sharp";
 import {
   captionFor,
   DEFAULT_SCREEN,
   detectScreenForText,
   generateIllustrationsForPost,
+  illustrationUrl,
   planIllustrations,
   renderScreenSvg,
   SCREENS,
+  stripIllustrations,
   type ScreenId,
 } from "@/lib/illustrations";
-import { storage } from "@/lib/storage";
 
 describe("detectScreenForText", () => {
   it("matches the more specific screen before the generic Windows Update fallback", () => {
@@ -103,21 +105,64 @@ describe("renderScreenSvg / captionFor", () => {
   });
 });
 
-describe("generateIllustrationsForPost (integration: real rasterisation + storage)", () => {
-  it("stores a featured PNG and splices captioned inline images into the body, cleaning up after itself", async () => {
+describe("generateIllustrationsForPost (pure — no filesystem, no storage)", () => {
+  it("builds an /api/illustration URL for the featured image and splices captioned inline images into the body", () => {
     const body = ["Intro.", "", "## Method 1: Run the troubleshooter", "Open Settings > System > Troubleshoot and run it.", "", "## If nothing worked", "Contact support."].join("\n");
-    const result = await generateIllustrationsForPost({ title: "Test illustration generation", body, slug: `illustration-test-${Date.now()}` });
-    try {
-      expect(result.featuredImage).toMatch(/^\/uploads\/illustrations\/.*\.png$/);
-      expect(result.body).toContain("Illustration:");
-      expect(result.body).not.toContain("Screenshot");
-      expect(result.body.indexOf("## Method 1")).toBeLessThan(result.body.indexOf("![Illustration:"));
-      // the inline image must land inside Method 1, before the "If nothing worked" section
-      expect(result.body.indexOf("![Illustration:")).toBeLessThan(result.body.indexOf("## If nothing worked"));
-    } finally {
-      await storage.remove(result.featuredImage);
-      const inlineUrls = [...result.body.matchAll(/!\[Illustration:[^\]]*\]\((\/uploads\/illustrations\/[^)]+)\)/g)].map((m) => m[1]);
-      await Promise.all(inlineUrls.map((u) => storage.remove(u)));
+    const result = generateIllustrationsForPost({ title: "Test illustration generation", body });
+    expect(result.featuredImage).toMatch(/^\/api\/illustration\?screen=troubleshoot&highlight=0&w=1200&h=630$/);
+    expect(result.body).toContain("Illustration:");
+    expect(result.body).not.toContain("Screenshot");
+    expect(result.body).not.toContain("/uploads/illustrations/");
+    expect(result.body.indexOf("## Method 1")).toBeLessThan(result.body.indexOf("![Illustration:"));
+    // the inline image must land inside Method 1, before the "If nothing worked" section
+    expect(result.body.indexOf("![Illustration:")).toBeLessThan(result.body.indexOf("## If nothing worked"));
+  });
+
+  it("illustrationUrl is deterministic and carries the screen, highlight and size", () => {
+    expect(illustrationUrl("windows-update", 1, 900, 473)).toBe("/api/illustration?screen=windows-update&highlight=1&w=900&h=473");
+  });
+});
+
+describe("stripIllustrations", () => {
+  it("removes a previously-inserted illustration block regardless of which URL scheme it used", () => {
+    const withLegacy = [
+      "## Method 1: Run the troubleshooter",
+      "",
+      "![Illustration: the Troubleshoot page](/uploads/illustrations/123-post-inline-0.png)",
+      "",
+      "*Illustration: the Troubleshoot page*",
+      "",
+      "Open Settings > System > Troubleshoot and run it.",
+    ].join("\n");
+    const cleaned = stripIllustrations(withLegacy);
+    expect(cleaned).not.toContain("Illustration:");
+    expect(cleaned).not.toContain("/uploads/illustrations/");
+    expect(cleaned).toContain("Open Settings > System > Troubleshoot and run it.");
+  });
+
+  it("is a no-op on a body with no illustration block", () => {
+    const body = "## Method 1\n\nJust steps, no image.";
+    expect(stripIllustrations(body)).toBe(body);
+  });
+
+  it("round-trips: stripping a freshly generated post recovers content re-plannable to the same screens", () => {
+    const original = ["Intro.", "", "## Method 1: Run the troubleshooter", "Open Settings > System > Troubleshoot and run it.", "", "## If nothing worked", "Contact support."].join("\n");
+    const generated = generateIllustrationsForPost({ title: "x", body: original });
+    const stripped = stripIllustrations(generated.body);
+    const replanned = generateIllustrationsForPost({ title: "x", body: stripped });
+    expect(replanned.featuredImage).toBe(generated.featuredImage);
+  });
+});
+
+describe("/api/illustration rendering (the same rasterisation the route handler performs)", () => {
+  it("produces a valid PNG of the requested dimensions for every catalogued screen", async () => {
+    for (const id of Object.keys(SCREENS) as ScreenId[]) {
+      const svg = renderScreenSvg(id, 0);
+      const png = await sharp(Buffer.from(svg)).resize(300, 158).png().toBuffer();
+      const meta = await sharp(png).metadata();
+      expect(meta.format).toBe("png");
+      expect(meta.width).toBe(300);
+      expect(meta.height).toBe(158);
     }
   });
 });

@@ -95,7 +95,9 @@ export function PostCard({ post, variant = "card", priority = false }: { post: P
           sizes={lead ? "(min-width: 1024px) 66vw, 100vw" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
           className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           priority={priority}
-          unoptimized={image.startsWith("/api/og")}
+          // Both /api/og and /api/illustration are already-sized, pre-rendered images — skip Next's
+          // own optimizer so it doesn't make a redundant resize round-trip to a dynamic route.
+          unoptimized={image.startsWith("/api/og") || image.startsWith("/api/illustration")}
         />
       </Link>
       <div className="min-w-0">

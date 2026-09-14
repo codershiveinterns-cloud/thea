@@ -192,7 +192,7 @@ async function processKeyword(kw: SelectableKeyword, ctx: { items: FeedItem[]; a
   let featuredImage = ogImagePath(post.title, kw.categorySlug);
   let body = post.body;
   try {
-    const illustrated = await generateIllustrationsForPost({ title: post.title, body: post.body, slug });
+    const illustrated = generateIllustrationsForPost({ title: post.title, body: post.body });
     featuredImage = illustrated.featuredImage;
     body = illustrated.body;
   } catch (err) {
